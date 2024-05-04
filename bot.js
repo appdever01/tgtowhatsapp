@@ -161,7 +161,7 @@ const start = async () => {
       const ready = groups.every((group) => group.from);
       if (!ready) client.log("ID required type /id in group", true);
       else
-        schedule(`*/20 * * * *`, async () => {
+        schedule(`*/10 * * * *`, async () => {
           for (const group of groups) {
             await delay(2 * 60 * 1000);
             fetchChannels(group);
