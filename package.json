@@ -1,0 +1,34 @@
+{
+  "name": "TG-WhatsApp",
+  "version": "1.0.0",
+  "description": "A WhatsApp bot which scraping Telegram Channels.",
+  "main": "bot.js",
+  "license": "UNLICENSED",
+  "scripts": {
+    "format": "prettier --write --config .prettierrc.json \"*.js\"",
+    "start": "node --optimize_for_size --max-old-space-size=4096 bot.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "telegram",
+    "bot"
+  ],
+  "author": "AliAryanTech",
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.5.0",
+    "axios": "^1.5.1",
+    "bing-translate-api": "^2.10.0",
+    "chalk": "4.1.1",
+    "express": "^4.18.2",
+    "fs-extra": "^11.1.1",
+    "link-preview-js": "^3.0.5",
+    "node-cron": "^3.0.2",
+    "openai": "^3.2.1",
+    "os": "^0.1.2",
+    "pino": "^8.16.0",
+    "prettier": "^3.0.3",
+    "qr-image": "^3.2.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
