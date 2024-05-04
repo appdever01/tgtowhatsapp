@@ -14,11 +14,25 @@
   {
     "from": "120363196943930355@g.us",
     "channels": [
-      "a7rartullkarm",
-      "sarayatulkarm",
-      "tulkrmeoon",
-      "tolkarm_alhadth",
-      "alrasdalkarmi77"
+      "bethlahem_alhadath",
+      "bethlehemnewss",
+      "dgjnvhi",
+      "Bethlehem_events",
+      "btlehm",
+      "betlahem2020",
+      "City_of_Bethlehem"
+    ]
+  },
+  {
+    "from": "120363293275125352@g.us",
+    "channels": [
+      "bethlahem_alhadath",
+      "bethlehemnewss",
+      "dgjnvhi",
+      "Bethlehem_events",
+      "btlehm",
+      "betlahem2020",
+      "City_of_Bethlehem"
     ]
   },
   {
@@ -32,12 +46,7 @@
   },
   {
     "from": "120363295551372448@g.us",
-    "channels": [
-      "nanlugher",
-      "nablus_2",
-      "nablus_5",
-      "nablus_ps"
-    ]
+    "channels": ["nanlugher", "nablus_2", "nablus_5", "nablus_ps"]
   },
   {
     "from": "120363296610691070@g.us",
@@ -51,12 +60,7 @@
   },
   {
     "from": "120363278279021863@g.us",
-    "channels": [
-      "from_hebron",
-      "khalelnews",
-      "hebmix",
-      "httpschildrenpalestin"
-    ]
+    "channels": ["from_hebron", "khalelnews", "hebmix", "httpschildrenpalestin"]
   },
   {
     "from": "120363277316826721@g.us",
@@ -108,5 +112,72 @@
       "qassami_new",
       "hayat_alshaid1"
     ]
+  },
+  {
+    "from": "120363196402441346@g.us",
+    "channels": [
+      "cnnturkcomtr",
+      "haberturkz",
+      "buzznews_tr",
+      "trhaberl",
+      "turkeys_news",
+      "bpthaber"
+    ]
+  },
+  {
+    "from": "120363196943930355@g.us",
+    "channels": ["almayadeen", "nahermedia", "irivf", "alarabytelevision"]
+  },
+  {
+    "from": "120363179391060081@g.us",
+    "channels": [
+      "sananewsenglish",
+      "syrianarabnewsagency",
+      "yomyatkzefeh1",
+      "gss_spokesman",
+      "televisionsyria",
+      "syriawatannews"
+    ]
+  },
+  {
+    "from": "120363177396991267@g.us",
+    "channels": [
+      "molakhasatekhbarya",
+      "epochtimespersian",
+      "rfi_fa",
+      "youseffares19",
+      "maax_news1",
+      "iranintltv",
+      "irannc",
+      "iran_ru_news"
+    ]
+  },
+  {
+    "from": "120363179107004908@g.us",
+    "channels": ["lebanonnews2", "news247leb", "janoubia_news", "lebupdate"]
+  },
+  {
+    "from": "120363196896955737@g.us",
+    "channels": [
+      "alarabiya",
+      "ajanews",
+      "ajmubasher",
+      "ajpalestine",
+      "allnazihunter"
+    ]
+  },
+  {
+    "from": "120363180232156897@g.us",
+    "channels": [
+      "saudinews50",
+      "sabq24news",
+      "arabi21news",
+      "almowatennew",
+      "hayat_alshaid1"
+    ]
+  },
+  {
+    "from": "120363199577336229@g.us",
+    "channels": ["ahd_albahaa", "wahediraq"]
   }
 ]
