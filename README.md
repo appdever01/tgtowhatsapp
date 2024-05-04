@@ -4,19 +4,17 @@ A WhatsApp bot which scraping Telegram Channels
 
 ### ⛵ Prerequisites
 
- - [Git](https://git-scm.com/)
- - [Node.js](https://nodejs.org/en/)
+- [Git](https://git-scm.com/)
+- [Node.js](https://nodejs.org/en/)
 
 ### ⚠ Requirements
 
- - WhatsApp Group ID: 1203xxxxxxx1@g.us
-**Note: Send /id on WhatsApp to get your Group ID**
- ### 🍀 Running
+- WhatsApp Group ID: 1203xxxxxxx1@g.us
+  **Note: Send /id on WhatsApp to get your Group ID**
 
- ```sh
- npm install --force 
- npm run start
- ```
+### 🍀 Running
 
-### 👨🏻‍💻 Developer
-* [`Alι_Aryαɴ`](https://github.com/AliAryanTech)
+```sh
+npm install --force
+npm run start
+```
