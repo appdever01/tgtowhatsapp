@@ -35,10 +35,8 @@
     "channels": [
       "nanlugher",
       "nablus_2",
-      "nablusnews2",
       "nablus_5",
-      "nablus_ps",
-      "nablusnablusnablus"
+      "nablus_ps"
     ]
   },
   {
@@ -48,9 +46,7 @@
       "ramallahnew",
       "ramallahnewss",
       "alersalps",
-      "sawtalmughayyir",
-      "ramallkah",
-      "ramaallah"
+      "sawtalmughayyir"
     ]
   },
   {
@@ -58,23 +54,59 @@
     "channels": [
       "from_hebron",
       "khalelnews",
-      "abn_alkhalil",
       "hebmix",
-      "fromhebron",
-      "chathebron",
       "httpschildrenpalestin"
     ]
   },
   {
-    "from": "120363293275125352@g.us",
+    "from": "120363277316826721@g.us",
     "channels": [
-      "bethlahem_alhadath",
-      "bethlehemnewss",
-      "dgjnvhi",
-      "bethlehem_events",
-      "btlehm",
-      "betlahem2020",
-      "city_of_bethlehem"
+      "tubastimes",
+      "tubasal_majd",
+      "a7rartobas",
+      "qassami_new",
+      "tubasalkdraa",
+      "tubasgate",
+      "tubas101"
+    ]
+  },
+  {
+    "from": "120363276638372835@g.us",
+    "channels": [
+      "selfetnews",
+      "radioalzaytona",
+      "selfetnewss",
+      "shadyslf",
+      "omarabulila",
+      "a5barsalfeet"
+    ]
+  },
+  {
+    "from": "120363276989062169@g.us",
+    "channels": [
+      "ra_50_mm",
+      "jerichocm/22379",
+      "jerichomix2022",
+      "khbnews1",
+      "jerichonews",
+      "saraeyarehaa",
+      "jreichocm1"
+    ]
+  },
+  {
+    "from": "120363294872875593@g.us",
+    "channels": [
+      "abudees",
+      "abodis12828",
+      "batternew",
+      "livequds",
+      "qastalnews",
+      "pales_jerus",
+      "alqudsalbwsalah",
+      "ahfadalbahaa",
+      "alhayaps2023",
+      "qassami_new",
+      "hayat_alshaid1"
     ]
   }
 ]

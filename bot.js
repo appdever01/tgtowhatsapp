@@ -33,7 +33,6 @@ const readFile = (path, value = {}) =>
 
 const groups = readFile("groups.json", []);
 const store = readFile("store.json");
-const words = readFile("words.json");
 
 const getChannels = () => {
   groups.forEach((group) => {
@@ -52,29 +51,6 @@ const removeInvalidChannel = (from, channel) => {
 const saveStore = (store) =>
   fs.writeJSONSync("store.json", store, { spaces: 2 });
 
-const saveWords = async (content) => {
-  words.keywords = words.keywords || [];
-  words.keywords.push(...(Array.isArray(content) ? content : []));
-  words.keywords = [...new Set(words.keywords)];
-  fs.writeJSONSync("words.json", words, { spaces: 2 });
-};
-
-const updateWords = (category, element) => {
-  const index = isNaN(element)
-    ? words.keywords.indexOf(element)
-    : parseInt(element);
-  if (isNaN(index) || index < 0 || index >= words.keywords.length)
-    return "Not Found";
-  const removed = words.keywords.splice(index, 1)[0];
-  words.roles = words.roles || [];
-  let role =
-    words.roles.find((r) => r[category]) ||
-    (words.roles.push({ [category]: [] }), words.roles[words.roles.length - 1]);
-  role[category].push(removed);
-  fs.writeJSONSync("words.json", words, { spaces: 2 });
-  return "OK";
-};
-
 const transcribe = async (text) => {
   let translation = "";
   const maxChunkSize = 1000;
@@ -86,30 +62,6 @@ const transcribe = async (text) => {
     translation += result.translation;
   }
   return translation;
-};
-
-const getKeyWords = async (context) => {
-  if (!apiKey) return [];
-  const messages = [
-    {
-      role: "system",
-      content:
-        "Identify and list person or company names from the paragraph in a JavaScript array, exclusively using Hebrew. Translate names written in other languages to Hebrew as needed.",
-    },
-    { role: "user", content: context.trim() },
-  ];
-  try {
-    const { data } = await ai.createChatCompletion({
-      model: "gpt-3.5-turbo-16k",
-      messages,
-    });
-    const { content } = data.choices[0]?.message;
-    if (!content || !/^\[\s*".*"\s*\]$/.test(content)) return [];
-    return JSON.parse(content) || [];
-  } catch (error) {
-    console.error(error.message);
-    return [];
-  }
 };
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -184,46 +136,6 @@ const start = async () => {
     switch (cmd) {
       case "id":
         return void M.reply(M.from);
-      case "list": {
-        if (!mods.includes(M.sender))
-          return void M.reply("Only mods can use it");
-        if (!(words.keywords || []).length)
-          return void M.reply("No keywords found");
-        const keywordsList = words.keywords
-          .map((word, index) => `${index}. ${word}`)
-          .join("\n");
-        return void M.reply(`Words List:\n\n${keywordsList}`);
-      }
-      case "roles":
-      case "analysis": {
-        if (!mods.includes(M.sender))
-          return void M.reply("Only mods can use it");
-        const roles = words.roles || [];
-        if (!roles.length) return void M.reply("No roles available.");
-        let rolesList = "🟩 Word List 🟩";
-        rolesList += `\n🍥 Total Categories: ${roles.length}`;
-        rolesList += `\n\n${roles
-          .map(
-            (role) =>
-              `*${Object.keys(role)}:*\n${role[Object.keys(role)]
-                .map((word, index) => `${index + 1}. ${word}`)
-                .join("\n")}`
-          )
-          .join("\n\n")}`;
-        return void M.reply(rolesList.trim());
-      }
-      case "role":
-      case "categorize": {
-        if (!mods.includes(M.sender))
-          return void M.reply("Only mods can use it");
-        if (!context) return void M.reply("Provide a keyword!");
-        const [role, element] = context.trim().split("|");
-        if (!role || !element) return void M.reply("Do role|element");
-        const roles = updateWords(role.trim().toLowerCase(), element);
-        return void M.reply(
-          roles === "OK" ? "🟩 Updated roles" : "🟥 Element not available"
-        );
-      }
     }
   });
 
@@ -246,7 +158,7 @@ const start = async () => {
         return void null;
       });
       if (!messages || !messages.length) {
-        removeInvalidChannel(from, channel);
+        // removeInvalidChannel(from, channel);
         client.log(`Invalid ${channel} removed`, true);
         return void null;
       }
@@ -264,25 +176,7 @@ const start = async () => {
           client.log(`No new messages ${channel}`);
           return void null;
         }
-        messagesToSend.forEach(async (message, messageIndex) => {
-          const { type, caption, mediaUrl } = message;
-          let text = await transcribe(caption);
-          const keywords = await getKeyWords(
-            text.includes(errorMessage) ? caption : text
-          );
-          saveWords(keywords);
-          text = `*${channel}*\n\n${text}`;
-          const replyData = type === "text" ? text : { url: mediaUrl };
-          if (skipper && text.includes(errorMessage)) {
-            client.log(
-              `Skipping translation failed message from ${channel}`,
-              true
-            );
-            return void null;
-          }
-          await delay(5000 * messageIndex);
-          await reply(from, replyData, type, text);
-        });
+
         store[channel] = messagesToSend.pop().id;
         saveStore(store);
       }
@@ -293,8 +187,6 @@ const start = async () => {
         const keywords = await getKeyWords(
           text.includes(errorMessage) ? caption : text
         );
-        saveWords(keywords);
-        text = `*${channel}*\n\n${text}`;
         store[channel] = id;
         saveStore(store);
         const replyData = type === "text" ? text : { url: mediaUrl };
