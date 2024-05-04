@@ -271,7 +271,7 @@ const start = async () => {
             text.includes(errorMessage) ? caption : text
           );
           saveWords(keywords);
-          text = `*${text}`;
+          text = `${text}`;
           const replyData = type === "text" ? text : { url: mediaUrl };
           if (skipper && text.includes(errorMessage)) {
             client.log(
@@ -294,7 +294,7 @@ const start = async () => {
           text.includes(errorMessage) ? caption : text
         );
         saveWords(keywords);
-        text = `*${channel}*\n\n${text}`;
+        text = `${text}`;
         store[channel] = id;
         saveStore(store);
         const replyData = type === "text" ? text : { url: mediaUrl };
