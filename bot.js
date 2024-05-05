@@ -246,7 +246,7 @@ const start = async () => {
         return void null;
       });
       if (!messages || !messages.length) {
-        removeInvalidChannel(from, channel);
+        // removeInvalidChannel(from, channel);
         client.log(`Invalid ${channel} removed`, true);
         return void null;
       }
