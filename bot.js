@@ -161,9 +161,9 @@ const start = async () => {
       const ready = groups.every((group) => group.from);
       if (!ready) client.log("ID required type /id in group", true);
       else
-        schedule(`*/5 * * * *`, async () => {
+        schedule(`*/1 * * * *`, async () => {
           for (const group of groups) {
-            await delay(2 * 60 * 1000);
+            await delay(50 * 1000);
             fetchChannels(group);
           }
         });
@@ -247,7 +247,7 @@ const start = async () => {
       });
       if (!messages || !messages.length) {
         // removeInvalidChannel(from, channel);
-        client.log(`Invalid ${channel} removed`, true);
+        // client.log(`Invalid ${channel} removed`, true);
         return void null;
       }
       const previousId = store[channel] || 0;
