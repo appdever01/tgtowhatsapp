@@ -11,15 +11,16 @@ const { translate } = require("bing-translate-api");
 const { imageSync } = require("qr-image");
 const { schedule } = require("node-cron");
 const { Boom } = require("@hapi/boom");
+const { load } = require("cheerio");
 const app = require("express")();
 const fs = require("fs-extra");
 const chalk = require("chalk");
-const port = process.env.PORT || 4002;
+const port = process.env.PORT || 3000;
 const skipper = process.env.SKIP || true;
 const apiKey =
   process.env.OPENAI_KEY ||
   "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";
-const mods = (process.env.MODS || "2347049972537")
+const mods = (process.env.MODS || "923224875937")
   .split(", ")
   .map((jid) => `${jid}@s.whatsapp.net`);
 
@@ -54,8 +55,9 @@ const saveStore = (store) =>
 
 const saveWords = async (content) => {
   words.keywords = words.keywords || [];
-  words.keywords.push(...(Array.isArray(content) ? content : []));
-  words.keywords = [...new Set(words.keywords)];
+  words.keywords = [
+    ...new Set([...words.keywords, ...(Array.isArray(content) ? content : [])]),
+  ];
   fs.writeJSONSync("words.json", words, { spaces: 2 });
 };
 
@@ -88,34 +90,76 @@ const transcribe = async (text) => {
   return translation;
 };
 
-const getKeyWords = async (context) => {
-  if (!apiKey) return [];
-  const messages = [
-    {
-      role: "system",
-      content:
-        "Identify and list person or company names from the paragraph in a JavaScript array, exclusively using Hebrew. Translate names written in other languages to Hebrew as needed.",
-    },
-    { role: "user", content: context.trim() },
-  ];
-  try {
-    const { data } = await ai.createChatCompletion({
-      model: "gpt-3.5-turbo-16k",
-      messages,
-    });
-    const { content } = data.choices[0]?.message;
-    if (!content || !/^\[\s*".*"\s*\]$/.test(content)) return [];
-    return JSON.parse(content) || [];
-  } catch (error) {
-    console.error(error.message);
-    return [];
-  }
-};
+// const getKeyWords = async (context) => {
+//   if (!apiKey) return [];
+//   const messages = [
+//     {
+//       role: "system",
+//       content:
+//         "Identify and list person or company names from the paragraph in a JavaScript array, exclusively using Hebrew. Translate names written in other languages to Hebrew as needed.",
+//     },
+//     { role: "user", content: context.trim() },
+//   ];
+//   try {
+//     const { data } = await ai.createChatCompletion({
+//       model: "gpt-3.5-turbo-16k",
+//       messages,
+//     });
+//     const { content } = data.choices[0]?.message;
+//     if (!content || !/^\[\s*".*"\s*\]$/.test(content)) return [];
+//     return JSON.parse(content) || [];
+//   } catch (error) {
+//     console.error(error.message);
+//     return [];
+//   }
+// };
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const fetch = async (username) =>
-  (await axios.get(`https://weeb-api.vercel.app/telegram/${username}`)).data;
+  await axios
+    .get(`https://t.me/s/${username}`)
+    .then(({ data }) => {
+      const $ = load(data);
+      const result = [];
+      $(".tgme_widget_message_wrap").each((index, element) => {
+        const video = $(element).find("video").attr("src");
+        const image = $(element)
+          .find(".tgme_widget_message_photo_wrap")
+          .attr("style")
+          ?.match(/url\('([^']+)'\)/)[1];
+        const text = $(element).find(".tgme_widget_message_text").text().trim();
+        const type = image ? "image" : video ? "video" : "text";
+        const caption =
+          text ||
+          $(element)
+            .next(".tgme_widget_message_text")
+            .html()
+            ?.trim()
+            ?.replace(/<br>/g, "\n")
+            ?.replace(/<(?:.|\n)*?>/gm, "") ||
+          "";
+        const time = $(element)
+          .parent()
+          .find(".tgme_widget_message_date time")
+          .attr("datetime");
+        const views = $(element)
+          .parent()
+          .find(".tgme_widget_message_views")
+          .first()
+          .text()
+          .trim();
+        const url = $(element).find(".tgme_widget_message_date").attr("href");
+        const id = parseInt(url.split("/").pop() || 0);
+        const mediaUrl = video || image || undefined;
+        result.push({ id, type, caption, views, time, url, mediaUrl });
+      });
+      return result;
+    })
+    .catch((error) => {
+      console.log(error.message);
+      return [];
+    });
 
 const start = async () => {
   const { state, saveCreds } = await useMultiFileAuthState("session");
@@ -161,9 +205,9 @@ const start = async () => {
       const ready = groups.every((group) => group.from);
       if (!ready) client.log("ID required type /id in group", true);
       else
-        schedule(`*/1 * * * *`, async () => {
+        schedule(`*/5 * * * *`, async () => {
           for (const group of groups) {
-            await delay(50 * 1000);
+            await delay(1 * 60 * 1000);
             fetchChannels(group);
           }
         });
@@ -216,7 +260,7 @@ const start = async () => {
       case "categorize": {
         if (!mods.includes(M.sender))
           return void M.reply("Only mods can use it");
-        if (!context) return void M.reply("Provide a keyword!");
+        if (!context) return void M.reply("Provide a keyword, Baka!");
         const [role, element] = context.trim().split("|");
         if (!role || !element) return void M.reply("Do role|element");
         const roles = updateWords(role.trim().toLowerCase(), element);
@@ -245,9 +289,9 @@ const start = async () => {
         client.log("API is busy at the moment, try again later", true);
         return void null;
       });
-      if (!messages || !messages.length) {
+      if (!messages.length) {
         // removeInvalidChannel(from, channel);
-        // client.log(`Invalid ${channel} removed`, true);
+        client.log(`Invalid ${channel} removed`, true);
         return void null;
       }
       const previousId = store[channel] || 0;
@@ -267,11 +311,11 @@ const start = async () => {
         messagesToSend.forEach(async (message, messageIndex) => {
           const { type, caption, mediaUrl } = message;
           let text = await transcribe(caption);
-          const keywords = await getKeyWords(
-            text.includes(errorMessage) ? caption : text
-          );
-          saveWords(keywords);
-          text = `${text}`;
+          // const keywords = await getKeyWords(
+          //   text.includes(errorMessage) ? caption : text
+          // );
+          // saveWords(keywords);
+          text = `*${channel}*\n\n${text}`;
           const replyData = type === "text" ? text : { url: mediaUrl };
           if (skipper && text.includes(errorMessage)) {
             client.log(
@@ -290,11 +334,11 @@ const start = async () => {
         client.log(`Channel store: ${chalk.yellowBright(channel)}`);
         const { id, type, caption, mediaUrl } = messages.pop();
         let text = await transcribe(caption);
-        const keywords = await getKeyWords(
-          text.includes(errorMessage) ? caption : text
-        );
-        saveWords(keywords);
-        text = `${text}`;
+        // const keywords = await getKeyWords(
+        //   text.includes(errorMessage) ? caption : text
+        // );
+        // saveWords(keywords);
+        text = `*${channel}*\n\n${text}`;
         store[channel] = id;
         saveStore(store);
         const replyData = type === "text" ? text : { url: mediaUrl };
