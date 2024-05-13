@@ -349,6 +349,10 @@ const start = async () => {
           );
           return void null;
         }
+        console.log(`From:::: ${from}`);
+        console.log(`From:::: ${replyData}`);
+        console.log(`From:::: ${type}`);
+        console.log(`From:::: ${text}`);
         await reply(from, replyData, type, text);
       }
     });
