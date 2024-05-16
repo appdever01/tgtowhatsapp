@@ -340,7 +340,7 @@ const start = async () => {
               caption: text,
             });
           } else if (type == "video") {
-            bot.sendVideo(chn, video, {
+            bot.sendVideo(chn, replyData.url, {
               caption: text,
             });
           }
