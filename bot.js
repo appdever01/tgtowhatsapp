@@ -325,6 +325,10 @@ const start = async () => {
             return void null;
           }
           await delay(5000 * messageIndex);
+           console.log(`From:::: ${from}`);
+           console.log(`ReplyData:::: ${replyData}`);
+           console.log(`type:::: ${type}`);
+           console.log(`Text:::: ${text}`);
           await reply(from, replyData, type, text);
         });
         store[channel] = messagesToSend.pop().id;
