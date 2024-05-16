@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "format": "prettier --write --config .prettierrc.json \"*.js\"",
-    "start": "node --optimize_for_size --max-old-space-size=4096 tgg.js"
+    "start": "node --optimize_for_size --max-old-space-size=4096 bot.js"
   },
   "keywords": [
     "whatsapp",
