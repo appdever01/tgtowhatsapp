@@ -334,16 +334,14 @@ const start = async () => {
           console.log(`Text:::: ${text}`);
           const chn = "@hebrewmuslem";
           if (type == "text") {
-            bot.sendMessage(chn, text, { parse_mode: "MarkdownV2" });
+            bot.sendMessage(chn, text);
           } else if (type == "image") {
             bot.sendPhoto(chn, replyData.url, {
               caption: text,
-              parse_mode: "MarkdownV2",
             });
           } else if (type == "video") {
             bot.sendVideo(chn, video, {
               caption: text,
-              parse_mode: "MarkdownV2",
             });
           }
           await reply(from, replyData, type, text);
