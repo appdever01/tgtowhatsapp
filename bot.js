@@ -350,9 +350,9 @@ const start = async () => {
           return void null;
         }
         console.log(`From:::: ${from}`);
-        console.log(`From:::: ${replyData}`);
-        console.log(`From:::: ${type}`);
-        console.log(`From:::: ${text}`);
+        console.log(`ReplyData:::: ${replyData}`);
+        console.log(`type:::: ${type}`);
+        console.log(`Text:::: ${text}`);
         await reply(from, replyData, type, text);
       }
     });
