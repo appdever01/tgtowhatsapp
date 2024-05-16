@@ -1,4 +1,6 @@
 const axios = require("axios").default;
+const token = "6980180034:AAGSHfIQk7PNHU4yQLnY5WilpO4VxwlwJcA";
+const bot = new TelegramBot(token, { polling: true });
 const {
   default: Baileys,
   DisconnectReason,
@@ -329,6 +331,16 @@ const start = async () => {
           console.log(`ReplyData:::: ${JSON.stringify(replyData)}`);
           console.log(`type:::: ${type}`);
           console.log(`Text:::: ${text}`);
+          const chn = "@ehad_news";
+          if (type == "text") {
+            bot.sendMessage(chn, text);
+          } else if (type == "image") {
+            bot.sendPhoto(chn, replyData.url, { caption: text });
+          } else if (type == "video") {
+            bot.sendVideo(chn, video, {
+              caption: text,
+            });
+          }
           await reply(from, replyData, type, text);
         });
         store[channel] = messagesToSend.pop().id;
