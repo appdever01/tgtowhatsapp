@@ -327,7 +327,6 @@ const start = async () => {
             );
             return void null;
           }
-          await delay(5000 * messageIndex);
           console.log(`From:::: ${from}`);
           console.log(`ReplyData:::: ${JSON.stringify(replyData)}`);
           console.log(`type:::: ${type}`);
