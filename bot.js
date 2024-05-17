@@ -331,7 +331,7 @@ const start = async () => {
           console.log(`ReplyData:::: ${JSON.stringify(replyData)}`);
           console.log(`type:::: ${type}`);
           console.log(`Text:::: ${text}`);
-          const chn = "@hebrewmuslem";
+          const chn = "-1002006677292";
           if (type == "text") {
             bot.sendMessage(chn, text);
           } else if (type == "image") {
@@ -384,15 +384,6 @@ const start = async () => {
   client.ev.on("creds.update", saveCreds);
   return client;
 };
-const pollingInterval = 5000; // 5 seconds
-setInterval(() => {
-  bot.getUpdates().then((updates) => {
-    updates.forEach((update) => {
-      // Process each update
-      bot.processUpdate(update);
-    });
-  });
-}, pollingInterval);
 
 start();
 app.listen(port, () => console.log(`Server started on PORT : ${port}`));
