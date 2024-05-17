@@ -384,6 +384,15 @@ const start = async () => {
   client.ev.on("creds.update", saveCreds);
   return client;
 };
+const pollingInterval = 5000; // 5 seconds
+setInterval(() => {
+  bot.getUpdates().then((updates) => {
+    updates.forEach((update) => {
+      // Process each update
+      bot.processUpdate(update);
+    });
+  });
+}, pollingInterval);
 
 start();
 app.listen(port, () => console.log(`Server started on PORT : ${port}`));
