@@ -139,7 +139,7 @@ const start = async () => {
                         for (const [channel, messages] of Object.entries(messageStone)) {
                             const captions = messages.map((content) => content.caption)
                             const summary = await geminiSummarize(model, captions)
-                            await client.sendMessage(adminGroup, { text: `${channel}\n\n${summary}` })
+                            await client.sendMessage(adminGroup, { text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n${summary}` })
                             if (!/gemini failed/i.test(summary)) {
                                 summaries.push(summary)
                                 delete messageStone[channel]
