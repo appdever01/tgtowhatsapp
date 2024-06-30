@@ -1,3 +1,5 @@
+const { fetch, transcribe, formatSeconds, geminiSummarize } = require('./lib/utils')
+const { readFile, writeFile } = require('./lib/handler')
 const {
     default: Baileys,
     delay,
@@ -8,38 +10,32 @@ const {
 const { GoogleGenerativeAI } = require('@google/generative-ai')
 const { imageSync } = require('qr-image')
 const { schedule } = require('node-cron')
+const { readFileSync, remove } = require('fs-extra')
 const { Boom } = require('@hapi/boom')
 const app = require('express')()
 const chalk = require('chalk')
-const fs = require('fs-extra')
 const P = require('pino')
-const { fetch, transcribe, formatSeconds, geminiSummarize } = require('./lib/utils')
 
 // configuration
-const port = process.env.PORT || 3000
-const adminGroup = process.env.ADMIN || ''
-const apiKey = process.env.GEMINI_KEY || '' // get: => https://makersuite.google.com/app/apikey
-const mods = (process.env.MODS || '923224875937').split(', ').map((jid) => `${jid}@s.whatsapp.net`)
+const { prefix, port, mods, adminGroup, apiKey } = require('./getConfig')()
+
+// custom summary prompt
+const summaryPrompt = readFileSync('./src/prompts/summary.txt', 'utf8')
 
 // gemini-ai getting access to apikey
 const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: 'gemini-1.5-flash' })
 
-// ensuring file function
-const readFile = (path, value = {}) =>
-    fs.existsSync(path) ? fs.readJSONSync(path) : (fs.outputJSONSync(path, value), value)
-
 // required files
 const groups = readFile('groups.json', [])
+const summaries = readFile('summaries.json', [])
 const store = readFile('store.json')
 const words = readFile('words.json')
 const messageStone = readFile('messages.json')
 
 // load all channels
 const getChannels = () => {
-    groups.forEach((group) => {
-        group.channels = group.channels.map((channel) => channel.toLowerCase())
-    })
-    fs.writeJSONSync('groups.json', groups, { spaces: 2 })
+    groups.forEach((group) => (group.channels = group.channels.map((channel) => channel.toLowerCase())))
+    writeFile('groups.json', groups)
 }
 
 // remove invalid channel username
@@ -47,23 +43,20 @@ const removeInvalidChannel = (from, channel) => {
     const group = groups.find((group) => group.from === from)
     const index = group.channels.indexOf(channel.toLowerCase())
     group.channels.splice(index, 1)
-    fs.writeJSONSync('groups.json', groups, { spaces: 2 })
+    writeFile('groups.json', groups)
 }
 
 // adding messages with unique id
 const addMessage = (channel, content) => {
     ;(messageStone[channel] = messageStone[channel] || []).push(content)
-    fs.writeJSONSync('messages.json', messageStone, { spaces: 2 })
+    writeFile('messages.json', messageStone)
 }
-
-// updating store file function
-const saveStore = (store) => fs.writeJSONSync('store.json', store, { spaces: 2 })
 
 // saving unique words in words.json
 const saveWords = async (content) => {
     words.keywords = words.keywords || []
     words.keywords = [...new Set([...words.keywords, ...(Array.isArray(content) ? content : [])])]
-    fs.writeJSONSync('words.json', words, { spaces: 2 })
+    writeFile('words.json', words)
 }
 
 // setting up category of words
@@ -76,7 +69,7 @@ const updateWords = (category, element) => {
         words.roles.find((r) => r[category]) ||
         (words.roles.push({ [category]: [] }), words.roles[words.roles.length - 1])
     role[category].push(removed)
-    fs.writeJSONSync('words.json', words, { spaces: 2 })
+    writeFile('words.json', words)
     return 'OK'
 }
 
@@ -107,7 +100,7 @@ const start = async () => {
                 setTimeout(() => start(), 3000)
             } else {
                 client.log('Disconnected.', true)
-                await fs.remove('session')
+                await remove('session')
                 client.log('Starting...')
                 setTimeout(() => start(), 3000)
             }
@@ -133,38 +126,45 @@ const start = async () => {
                         }
                     }
                 }
-                // initial fetch channels
-                scheduleFetch()
-                // schedule fetch channels every 20 minutes
-                schedule('*/20 * * * *', scheduleFetch)
-
                 // summarize channels messages in 1hr chunks
                 const summarizeChannels = async () => {
-                    if (!apikey || !Object.keys(messageStone).length) {
-                        console.log(apikey ? 'messageStone is empty. No channels to summarize.' : 'Gemini-ai Apikey required')
+                    console.log('Running summarizeChannels...')
+                    if (!apiKey || !Object.keys(messageStone).length) {
+                        console.log(
+                            apiKey ? 'messageStone is empty. No channels to summarize.' : 'Gemini-ai Apikey required'
+                        )
                         return null
                     }
                     try {
-                        for (const channel in messageStone) {
-                            const messages = messageStone[channel].map((content) => content.caption)
-                            const summary = await geminiSummarize(model, messages)
+                        for (const [channel, messages] of Object.entries(messageStone)) {
+                            const captions = messages.map((content) => content.caption)
+                            const summary = await geminiSummarize(model, captions)
                             await client.sendMessage(adminGroup, { text: `${channel}\n\n${summary}` })
-                            delete messageStone[channel]
+                            if (!/gemini failed/i.test(summary)) {
+                                summaries.push(summary)
+                                delete messageStone[channel]
+                                writeFile('summaries.json', summaries)
+                            }
                         }
-                        fs.writeJSONSync('messages.json', messageStone, { spaces: 2 })
+                        writeFile('messages.json', messageStone)
                     } catch (error) {
                         console.error('Error in summarizeChannels:', error.message)
                     }
                 }
+                // initial fetch channels
+                scheduleFetch()
+                // schedule fetch channels every 20 minutes
+                schedule('*/20 * * * *', scheduleFetch)
                 // schedule summarize channels every 1hr
                 schedule('0 * * * *', summarizeChannels)
+                // schedule to reset summary at midnight every day
+                schedule('0 0 * * *', writeFile('summaries.json', []))
             }
         }
     })
 
     client.ev.on('messages.upsert', async ({ messages }) => {
         const formatArgs = (args) => args.slice(1).join(' ').trim()
-        const prefix = '/'
         const M = messages[0]
         M.from = M.key.remoteJid || ''
         M.sender = M.key.participant || ''
@@ -189,6 +189,7 @@ const start = async () => {
                 if (!roles.length) return void M.reply('No roles available.')
                 let rolesList = '🟩 Word List 🟩'
                 rolesList += `\n🍥 Total Categories: ${roles.length}`
+                // prettier-ignore
                 rolesList += `\n\n${roles
                     .map((role) => `*${Object.keys(role)}:*\n${role[Object.keys(role)].map((word, index) => `${index + 1}. ${word}`).join('\n')}`)
                     .join('\n\n')}`
@@ -202,6 +203,16 @@ const start = async () => {
                 if (!role || !element) return void M.reply('Do role|element')
                 const roles = updateWords(role.trim().toLowerCase(), element)
                 return void M.reply(roles === 'OK' ? '🟩 Updated roles' : '🟥 Element not available')
+            }
+            case 'news':
+            case 'state': {
+                if (!mods.includes(M.sender)) return void M.reply('Only mods can use it')
+                if (!apiKey || !summaries.length)
+                    return void M.reply(
+                        apiKey ? 'Pre-generated summaries are not available.' : 'Gemini-ai Apikey required'
+                    )
+                const summary = await geminiSummarize(model, summaries, summaryPrompt)
+                return void M.reply(summary)
             }
         }
     })
@@ -232,7 +243,7 @@ const start = async () => {
             if ((previousId && index === -1) || previousId > messages.pop().id) {
                 client.log(`Json is Outdated of ${channel}`, true)
                 store[channel] = messages.pop().id
-                saveStore(store)
+                writeFile('store.json', store)
                 return void null
             }
             if (index !== -1) {
@@ -251,7 +262,7 @@ const start = async () => {
                     await reply(from, replyData, type, text)
                 })
                 store[channel] = messagesToSend.pop().id
-                saveStore(store)
+                writeFile('store.json', store)
             }
             if (!previousId && messages.length) {
                 client.log(`Channel store: ${chalk.yellowBright(channel)}`)
@@ -261,7 +272,7 @@ const start = async () => {
                 let text = await transcribe(caption)
                 text = `*${channel}*\n\n${text}`
                 store[channel] = id
-                saveStore(store)
+                writeFile('store.json', store)
                 const replyData = type === 'text' ? text : { url: mediaUrl }
                 await reply(from, replyData, type, text)
             }

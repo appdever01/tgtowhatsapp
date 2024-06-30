@@ -2,16 +2,17 @@ const axios = require('axios').default
 const { load } = require('cheerio')
 const translate = require('translate-google')
 const { readFileSync } = require('fs-extra')
-const prompt = readFileSync('./lib/prompt.txt', 'utf8')
+const prompt = readFileSync('./src/prompts/messages.txt', 'utf8')
 
 // translator default: Hebrew
-const transcribe = (text) => translate(text, { to: 'iw' }).catch(err => err.message)
+const transcribe = (text) => translate(text, { to: 'iw' }).catch((err) => err.message)
 
 // scraping telegram public channel latest post
 const fetch = async (username) => {
     try {
         const { data } = await axios.get(`https://t.me/s/${username}`)
         const $ = load(data)
+        // prettier-ignore
         return $('.tgme_widget_message_wrap').map((_, element) => {
             const video = $(element).find('video').attr('src')
             const image = $(element).find('.tgme_widget_message_photo_wrap').attr('style')?.match(/url\('([^']+)'\)/)?.[1]
@@ -32,30 +33,29 @@ const fetch = async (username) => {
 }
 
 // convert ms to seconds and minutes
-const convertMs = ms => {
-    const time = ms < 60000 ? ms / 1000 : ms / 60000;
+const convertMs = (ms) => {
+    const time = ms < 60000 ? ms / 1000 : ms / 60000
     return `${Math.floor(time)} ${ms < 60000 ? 'seconds' : 'minutes'}`
 }
 
 // format seconds to mm:ss
-const formatSeconds = (ms) => new Date(ms).toISOString().substr(14, 5);
+const formatSeconds = (ms) => new Date(ms).toISOString().substr(14, 5)
 
 // formatting text for wa markdown
 const clean = (text) => text.replace(/\*{2,3}(.*?)\*{2,3}/g, '*$1*')
 
-// gemini summarizer 
-const geminiSummarize = async (model, posts) => {
+// gemini summarizer
+const geminiSummarize = async (model, posts, customPrompt) => {
     const messages = [
-        { role: 'user', parts: [{ text: prompt }]},
-        { role: 'model', parts: [{ text: 'Understood' }]}
+        { role: 'user', parts: [{ text: customPrompt || prompt }] },
+        { role: 'model', parts: [{ text: 'Understood' }] }
     ]
     try {
         const time = new Date(new Date().getTime()).toLocaleTimeString()
-        const content = JSON.stringify({ 
+        const content = JSON.stringify({
             current_time: time,
             posts
         })
-        console.log(content)
         const chat = model.startChat({
             history: messages,
             generationConfig: {

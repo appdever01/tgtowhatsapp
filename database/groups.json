@@ -17,10 +17,10 @@
       "bethlahem_alhadath",
       "bethlehemnewss",
       "dgjnvhi",
-      "Bethlehem_events",
+      "bethlehem_events",
       "btlehm",
       "betlahem2020",
-      "City_of_Bethlehem"
+      "city_of_bethlehem"
     ]
   },
   {
@@ -29,10 +29,10 @@
       "bethlahem_alhadath",
       "bethlehemnewss",
       "dgjnvhi",
-      "Bethlehem_events",
+      "bethlehem_events",
       "btlehm",
       "betlahem2020",
-      "City_of_Bethlehem"
+      "city_of_bethlehem"
     ]
   },
   {
@@ -46,7 +46,12 @@
   },
   {
     "from": "120363295551372448@g.us",
-    "channels": ["nanlugher", "nablus_2", "nablus_5", "nablus_ps"]
+    "channels": [
+      "nanlugher",
+      "nablus_2",
+      "nablus_5",
+      "nablus_ps"
+    ]
   },
   {
     "from": "120363296610691070@g.us",
@@ -60,7 +65,12 @@
   },
   {
     "from": "120363278279021863@g.us",
-    "channels": ["from_hebron", "khalelnews", "hebmix", "httpschildrenpalestin"]
+    "channels": [
+      "from_hebron",
+      "khalelnews",
+      "hebmix",
+      "httpschildrenpalestin"
+    ]
   },
   {
     "from": "120363277316826721@g.us",
@@ -114,8 +124,8 @@
     "channels": [
       "ttu_sanfur_tiqni",
       "midanalasima",
-      "AlasimaaNews",
-      "AlasimaN",
+      "alasimaanews",
+      "alasiman",
       "sawtalasema",
       "alasmahps"
     ]
@@ -149,7 +159,12 @@
   },
   {
     "from": "120363196943930355@g.us",
-    "channels": ["almayadeen", "nahermedia", "irivf", "alarabytelevision"]
+    "channels": [
+      "almayadeen",
+      "nahermedia",
+      "irivf",
+      "alarabytelevision"
+    ]
   },
   {
     "from": "120363179391060081@g.us",
@@ -177,7 +192,12 @@
   },
   {
     "from": "120363179107004908@g.us",
-    "channels": ["lebanonnews2", "news247leb", "janoubia_news", "lebupdate"]
+    "channels": [
+      "lebanonnews2",
+      "news247leb",
+      "janoubia_news",
+      "lebupdate"
+    ]
   },
   {
     "from": "120363196896955737@g.us",
@@ -201,6 +221,9 @@
   },
   {
     "from": "120363199577336229@g.us",
-    "channels": ["ahd_albahaa", "wahediraq"]
+    "channels": [
+      "ahd_albahaa",
+      "wahediraq"
+    ]
   }
 ]
