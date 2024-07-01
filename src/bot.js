@@ -110,7 +110,7 @@ const start = async () => {
             if (!ready) client.log('ID required type /id in group', true)
             else {
                 const totalChannels = groups.reduce((sum, group) => sum + group.channels.length, 0)
-                const delayPerChannel = Math.floor((20 * 60 * 1000) / totalChannels)
+                const delayPerChannel = Math.floor((3 * 60 * 1000) / totalChannels)
                 client.log(`Total Channels: ${totalChannels}, Delay per Channel: ${formatSeconds(delayPerChannel)}`)
                 const scheduleFetch = () => {
                     for (const group of groups) {
@@ -125,16 +125,15 @@ const start = async () => {
                 // summarize channels messages in 1hr chunks
                 const summarizeChannels = async () => {
                     console.log('Running summarizeChannels...')
-                    if (!apiKey || !Object.keys(messageStone).length) {
-                        console.log(
-                            apiKey ? 'messageStone is empty. No channels to summarize.' : 'Gemini-ai Apikey required'
-                        )
+                    if (!Object.keys(messageStone).length) {
+                        console.log('messageStone is empty. No channels to summarize.')
                         return null
                     }
                     try {
                         for (const [channel, messages] of Object.entries(messageStone)) {
                             const captions = messages.map((content) => content.caption)
                             const summary = await geminiSummarize(captions)
+                            console.log('summary: %d', summary.length)
                             await client.sendMessage(adminGroup, { text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n${summary}` })
                             if (!/gemini failed/i.test(summary)) {
                                 summaries.push(summary)
@@ -150,9 +149,9 @@ const start = async () => {
                 // initial fetch channels
                 scheduleFetch()
                 // schedule fetch channels every 20 minutes
-                schedule('*/20 * * * *', scheduleFetch)
+                schedule('*/3 * * * *', scheduleFetch)
                 // schedule summarize channels every 1hr
-                schedule('*/10 * * * *', summarizeChannels)
+                schedule('*/1 * * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
                 schedule('0 0 * * *', () => writeFile('summaries.json', []))
             }
@@ -203,11 +202,10 @@ const start = async () => {
             case 'news':
             case 'state': {
                 if (!mods.includes(M.sender)) return void M.reply('Only mods can use it')
-                if (!apiKey || !summaries.length)
-                    return void M.reply(
-                        apiKey ? 'Pre-generated summaries are not available.' : 'Gemini-ai Apikey required'
-                    )
+                if (!summaries.length)
+                    return void M.reply('Pre-generated summaries are not available.')
                 const summary = await geminiSummarize(summaries, summaryPrompt)
+                console.log('summary: %d of %d', summary.length, summaries.length)
                 return void M.reply(summary)
             }
         }
