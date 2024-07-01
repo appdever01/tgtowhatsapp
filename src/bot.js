@@ -292,6 +292,19 @@ const start = async () => {
                 store[channel] = id
                 writeFile('store.json', store)
                 const replyData = type === 'text' ? text : { url: mediaUrl }
+                 const chn = "-1002006677292";
+                    if (type == "text") {
+                        bot.sendMessage(chn, text);
+                        console.log('----------------------------------------------')
+                    } else if (type == "image") {
+                        bot.sendPhoto(chn, replyData.url, {
+                        caption: text,
+                        });
+                    } else if (type == "video") {
+                        bot.sendVideo(chn, replyData.url, {
+                        caption: text,
+                        });
+                    }
                 await reply(from, replyData, type, text)
             }
         })
