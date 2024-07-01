@@ -17,7 +17,8 @@ const chalk = require('chalk')
 const P = require('pino')
 
 // configuration
-const { prefix, port, mods, adminGroup, apiKey } = require('./getConfig')()
+const { prefix, port, mods, adminGroup, gemini } = require('./getConfig')()
+const apiKey = gemini[Math.floor(Math.random() * gemini.length)]
 
 // custom summary prompt
 const summaryPrompt = readFileSync('./src/prompts/summary.txt', 'utf8')
@@ -156,7 +157,7 @@ const start = async () => {
                 // schedule fetch channels every 20 minutes
                 schedule('*/20 * * * *', scheduleFetch)
                 // schedule summarize channels every 1hr
-                schedule('* 1 * * *', summarizeChannels)
+                schedule('*/5 * * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
                 schedule('0 0 * * *', () => writeFile('summaries.json', []))
             }
