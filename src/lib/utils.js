@@ -1,6 +1,6 @@
 const axios = require('axios').default
 const { load } = require('cheerio')
-const { GoogleGenerativeAI,HarmBlockThreshold, HarmCategory } = require('@google/generative-ai')
+const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require('@google/generative-ai')
 const { readFileSync } = require('fs-extra')
 const { gemini } = require('../getConfig')()
 const translate = require('translate-google')
