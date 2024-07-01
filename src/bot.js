@@ -8,6 +8,9 @@ const {
     useMultiFileAuthState
 } = require('@whiskeysockets/baileys')
 const { GoogleGenerativeAI } = require('@google/generative-ai')
+const TelegramBot = require("node-telegram-bot-api");
+const token = "6980180034:AAGSHfIQk7PNHU4yQLnY5WilpO4VxwlwJcA";
+const bot = new TelegramBot(token, { polling: true });
 const { imageSync } = require('qr-image')
 const { schedule } = require('node-cron')
 const { readFileSync, remove } = require('fs-extra')
@@ -261,6 +264,18 @@ const start = async () => {
                     text = `*${channel}*\n\n${text}`
                     const replyData = type === 'text' ? text : { url: mediaUrl }
                     await delay(5000 * messageIndex)
+                    const chn = "-1002006677292";
+                    if (type == "text") {
+                        bot.sendMessage(chn, text);
+                    } else if (type == "image") {
+                        bot.sendPhoto(chn, replyData.url, {
+                        caption: text,
+                        });
+                    } else if (type == "video") {
+                        bot.sendVideo(chn, replyData.url, {
+                        caption: text,
+                        });
+                    }
                     await reply(from, replyData, type, text)
                 })
                 store[channel] = messagesToSend.pop().id
