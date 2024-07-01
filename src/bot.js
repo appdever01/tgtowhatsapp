@@ -159,7 +159,7 @@ const start = async () => {
                 // initial fetch channels
                 scheduleFetch()
                 // schedule fetch channels every 20 minutes
-                schedule('*/10 * * * *', scheduleFetch)
+                schedule('*/20 * * * *', scheduleFetch)
                 // schedule summarize channels every 1hr
                 schedule('*/15 * * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
@@ -267,6 +267,7 @@ const start = async () => {
                     const chn = "-1002006677292";
                     if (type == "text") {
                         bot.sendMessage(chn, text);
+                        console.log('----------------------------------------------')
                     } else if (type == "image") {
                         bot.sendPhoto(chn, replyData.url, {
                         caption: text,
