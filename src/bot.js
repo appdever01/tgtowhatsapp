@@ -7,7 +7,6 @@ const {
     fetchLatestBaileysVersion,
     useMultiFileAuthState
 } = require('@whiskeysockets/baileys')
-const { GoogleGenerativeAI } = require('@google/generative-ai')
 const { imageSync } = require('qr-image')
 const { schedule } = require('node-cron')
 const { readFileSync, remove } = require('fs-extra')
@@ -17,14 +16,10 @@ const chalk = require('chalk')
 const P = require('pino')
 
 // configuration
-const { prefix, port, mods, adminGroup, gemini } = require('./getConfig')()
-const apiKey = gemini[Math.floor(Math.random() * gemini.length)]
+const { prefix, port, mods, adminGroup } = require('./getConfig')()
 
 // custom summary prompt
 const summaryPrompt = readFileSync('./src/prompts/summary.txt', 'utf8')
-
-// gemini-ai getting access to apikey
-const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: 'gemini-1.5-flash' })
 
 // required files
 const groups = readFile('groups.json', [])
@@ -139,7 +134,7 @@ const start = async () => {
                     try {
                         for (const [channel, messages] of Object.entries(messageStone)) {
                             const captions = messages.map((content) => content.caption)
-                            const summary = await geminiSummarize(model, captions)
+                            const summary = await geminiSummarize(captions)
                             await client.sendMessage(adminGroup, { text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n${summary}` })
                             if (!/gemini failed/i.test(summary)) {
                                 summaries.push(summary)
@@ -212,7 +207,7 @@ const start = async () => {
                     return void M.reply(
                         apiKey ? 'Pre-generated summaries are not available.' : 'Gemini-ai Apikey required'
                     )
-                const summary = await geminiSummarize(model, summaries, summaryPrompt)
+                const summary = await geminiSummarize(summaries, summaryPrompt)
                 return void M.reply(summary)
             }
         }
