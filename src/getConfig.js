@@ -5,6 +5,7 @@ module.exports = () => ({
     adminGroup: process.env.ADMIN || '',
     apiKey: process.env.GEMINI_KEY || '',
     mods: (process.env.MODS || '923224875937').split(', ').map((jid) => `${jid}@s.whatsapp.net`),
+    openai: (process.env.OPENAI_KEY || '').split(', '),
     port: process.env.PORT || 3000,
     prefix: process.env.PREFIX || '/'
 })

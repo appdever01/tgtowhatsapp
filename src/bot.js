@@ -1,4 +1,4 @@
-const { fetch, transcribe, formatSeconds, geminiSummarize } = require('./lib/utils')
+const { fetch, transcribe, formatSeconds, chatgptSummarize } = require('./lib/utils')
 const { readFile, writeFile } = require('./lib/handler')
 const {
     default: Baileys,
@@ -12,18 +12,20 @@ const { imageSync } = require('qr-image')
 const { schedule } = require('node-cron')
 const { readFileSync, remove } = require('fs-extra')
 const { Boom } = require('@hapi/boom')
+const OpenAI = require('openai')
 const app = require('express')()
 const chalk = require('chalk')
 const P = require('pino')
 
 // configuration
-const { prefix, port, mods, adminGroup, apiKey } = require('./getConfig')()
+const { prefix, port, mods, adminGroup, openai } = require('./getConfig')()
+const apiKey = openai[Math.floor(Math.random() * openai.length)]
 
 // custom summary prompt
 const summaryPrompt = readFileSync('./src/prompts/summary.txt', 'utf8')
 
-// gemini-ai getting access to apikey
-const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: 'gemini-1.5-flash' })
+// chatgpt getting access to apikey
+const model = new OpenAI({ apiKey })
 
 // required files
 const groups = readFile('groups.json', [])
@@ -138,9 +140,9 @@ const start = async () => {
                     try {
                         for (const [channel, messages] of Object.entries(messageStone)) {
                             const captions = messages.map((content) => content.caption)
-                            const summary = await geminiSummarize(model, captions)
+                            const summary = await chatgptSummarize(model, captions)
                             await client.sendMessage(adminGroup, { text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n${summary}` })
-                            if (!/gemini failed/i.test(summary)) {
+                            if (!/chatgpt failed/i.test(summary)) {
                                 summaries.push(summary)
                                 delete messageStone[channel]
                                 writeFile('summaries.json', summaries)
@@ -211,7 +213,7 @@ const start = async () => {
                     return void M.reply(
                         apiKey ? 'Pre-generated summaries are not available.' : 'Gemini-ai Apikey required'
                     )
-                const summary = await geminiSummarize(model, summaries, summaryPrompt)
+                const summary = await chatgptSummarize(model, summaries, summaryPrompt)
                 return void M.reply(summary)
             }
         }

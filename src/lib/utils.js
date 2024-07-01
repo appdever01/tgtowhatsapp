@@ -44,11 +44,10 @@ const formatSeconds = (ms) => new Date(ms).toISOString().substr(14, 5)
 // formatting text for wa markdown
 const clean = (text) => text.replace(/\*{2,3}(.*?)\*{2,3}/g, '*$1*')
 
-// gemini summarizer
-const geminiSummarize = async (model, posts, customPrompt) => {
+// chatgpt summarizer
+const chatgptSummarize = async (openai, posts, customPrompt) => {
     const messages = [
-        { role: 'user', parts: [{ text: customPrompt || prompt }] },
-        { role: 'model', parts: [{ text: 'Understood' }] }
+        { role: 'system', content: customPrompt || prompt }
     ]
     try {
         const time = new Date(new Date().getTime()).toLocaleTimeString()
@@ -56,18 +55,18 @@ const geminiSummarize = async (model, posts, customPrompt) => {
             current_time: time,
             posts
         })
-        const chat = model.startChat({
-            history: messages,
-            generationConfig: {
-                maxOutputTokens: 4096
-            }
+        messages.push({ role: 'user', content })
+        const chat = await openai.chat.completions.create({
+            model: 'gpt-3.5-turbo-16k',
+            messages,
+            max_tokens: 4096
         })
-        const { response } = await chat.sendMessage(content)
-        return clean(response.text())
+        const response = chat.choices[0]?.message
+        return clean(response.content)
     } catch (error) {
         console.log(error.message)
-        return 'Gemini failed: ' + error.message
+        return 'chatgpt failed: ' + error.message
     }
 }
 
-module.exports = { convertMs, fetch, transcribe, formatSeconds, geminiSummarize }
+module.exports = { convertMs, fetch, transcribe, formatSeconds, chatgptSummarize }
