@@ -1,6 +1,6 @@
 const axios = require('axios').default
 const { load } = require('cheerio')
-const { GoogleGenerativeAI } = require('@google/generative-ai')
+const { GoogleGenerativeAI,HarmBlockThreshold, HarmCategory } = require('@google/generative-ai')
 const { readFileSync } = require('fs-extra')
 const { gemini } = require('../getConfig')()
 const translate = require('translate-google')
@@ -48,14 +48,22 @@ const formatSeconds = (ms) => new Date(ms).toISOString().substr(14, 5)
 const clean = (text) => text.replace(/\*{2,3}(.*?)\*{2,3}/g, '*$1*')
 
 const safetySettings = [
-    {
-      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-      threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-    },
-    {
-      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    }
+   {
+                category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            }
 ]
 
 // gemini summarizer
