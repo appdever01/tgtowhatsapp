@@ -50,7 +50,24 @@ const clean = (text) => text.replace(/\*{2,3}(.*?)\*{2,3}/g, '*$1*')
 // gemini summarizer
 const geminiSummarize = async (posts, customPrompt) => {
     const apiKey = gemini[Math.floor(Math.random() * gemini.length)]
-    const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: 'gemini-1.5-flash',   safety_settings: [
+            {
+                category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            }
+        ]})
     const messages = [
         { role: 'user', parts: [{ text: customPrompt || prompt }] },
         { role: 'model', parts: [{ text: 'Understood' }] }
