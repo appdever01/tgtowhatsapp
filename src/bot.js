@@ -151,7 +151,7 @@ const start = async () => {
                 // schedule fetch channels every 20 minutes
                 schedule('*/20 * * * *', scheduleFetch)
                 // schedule summarize channels every 1hr
-                schedule('* 1 * * *', summarizeChannels)
+                schedule('0 * * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
                 schedule('0 0 * * *', () => writeFile('summaries.json', []))
             }
