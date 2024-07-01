@@ -110,7 +110,7 @@ const start = async () => {
             if (!ready) client.log('ID required type /id in group', true)
             else {
                 const totalChannels = groups.reduce((sum, group) => sum + group.channels.length, 0)
-                const delayPerChannel = Math.floor((3 * 60 * 1000) / totalChannels)
+                const delayPerChannel = Math.floor((20 * 60 * 1000) / totalChannels)
                 client.log(`Total Channels: ${totalChannels}, Delay per Channel: ${formatSeconds(delayPerChannel)}`)
                 const scheduleFetch = () => {
                     for (const group of groups) {
@@ -149,9 +149,9 @@ const start = async () => {
                 // initial fetch channels
                 scheduleFetch()
                 // schedule fetch channels every 20 minutes
-                schedule('*/3 * * * *', scheduleFetch)
+                schedule('*/20 * * * *', scheduleFetch)
                 // schedule summarize channels every 1hr
-                schedule('*/1 * * * *', summarizeChannels)
+                schedule('* 1 * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
                 schedule('0 0 * * *', () => writeFile('summaries.json', []))
             }
