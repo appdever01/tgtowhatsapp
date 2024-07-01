@@ -3,7 +3,7 @@ require('dotenv').config()
 
 module.exports = () => ({
     adminGroup: process.env.ADMIN || '',
-    apiKey: process.env.GEMINI_KEY || '',
+    gemini: (process.env.GEMINI_KEY || '').split(', '),
     mods: (process.env.MODS || '923224875937').split(', ').map((jid) => `${jid}@s.whatsapp.net`),
     port: process.env.PORT || 3000,
     prefix: process.env.PREFIX || '/'

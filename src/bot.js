@@ -17,7 +17,8 @@ const chalk = require('chalk')
 const P = require('pino')
 
 // configuration
-const { prefix, port, mods, adminGroup, apiKey } = require('./getConfig')()
+const { prefix, port, mods, adminGroup, gemini } = require('./getConfig')()
+const apiKey = gemini[Math.floor(Math.random() * gemini.length)]
 
 // custom summary prompt
 const summaryPrompt = readFileSync('./src/prompts/summary.txt', 'utf8')
