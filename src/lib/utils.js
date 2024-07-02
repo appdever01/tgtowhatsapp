@@ -1,7 +1,10 @@
 const axios = require('axios').default
 const { load } = require('cheerio')
-const translate = require('translate-google')
+const { GoogleGenerativeAI } = require('@google/generative-ai')
 const { readFileSync } = require('fs-extra')
+const { gemini } = require('../getConfig')()
+const translate = require('translate-google')
+
 const prompt = readFileSync('./src/prompts/messages.txt', 'utf8')
 
 // translator default: Hebrew
@@ -45,7 +48,26 @@ const formatSeconds = (ms) => new Date(ms).toISOString().substr(14, 5)
 const clean = (text) => text.replace(/\*{2,3}(.*?)\*{2,3}/g, '*$1*')
 
 // gemini summarizer
-const geminiSummarize = async (model, posts, customPrompt) => {
+const geminiSummarize = async (posts, customPrompt) => {
+    const apiKey = gemini[Math.floor(Math.random() * gemini.length)]
+    const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: 'gemini-1.5-flash',   safety_settings: [
+            {
+                category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold: HarmBlockThreshold.BLOCK_NONE
+            }
+        ]})
     const messages = [
         { role: 'user', parts: [{ text: customPrompt || prompt }] },
         { role: 'model', parts: [{ text: 'Understood' }] }
