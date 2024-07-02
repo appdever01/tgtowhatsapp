@@ -134,7 +134,9 @@ const start = async () => {
                             const captions = messages.map((content) => content.caption)
                             const summary = await geminiSummarize(captions)
                             console.log('summary: %d', summary.length)
-                            await client.sendMessage(adminGroup, { text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n${summary}` })
+                            await client.sendMessage(adminGroup, {
+                                text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n${summary}`
+                            })
                             if (!/gemini failed/i.test(summary)) {
                                 summaries.push(summary)
                                 delete messageStone[channel]
@@ -150,8 +152,8 @@ const start = async () => {
                 scheduleFetch()
                 // schedule fetch channels every 20 minutes
                 schedule('*/20 * * * *', scheduleFetch)
-                // schedule summarize channels every 1hr
-                schedule('* 1 * * *', summarizeChannels)
+                // schedule summarize channels not every hour but the hour of the day
+                schedule('0 * * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
                 schedule('0 0 * * *', () => writeFile('summaries.json', []))
             }
@@ -202,10 +204,11 @@ const start = async () => {
             case 'news':
             case 'state': {
                 if (!mods.includes(M.sender)) return void M.reply('Only mods can use it')
-                if (!summaries.length)
-                    return void M.reply('Pre-generated summaries are not available.')
-                if (context && Number(context))
-                    return void M.reply(`Pre-Summary: ${summaries[context - 1]}`)
+                if (!summaries.length) return void M.reply('Pre-generated summaries are not available.')
+                if (context && Number(context)) {
+                    const collect = summaries.reverse()
+                    return void M.reply(`Pre-Summary: ${collect[context - 1]}`)
+                }
                 const summary = await geminiSummarize(summaries.slice(-10), summaryPrompt)
                 console.log('summary: %d of %d', summary.length, summaries.length / 10)
                 return void M.reply(summary)

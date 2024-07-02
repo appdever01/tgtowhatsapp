@@ -72,7 +72,7 @@ const safetySettings = [
         category: HarmCategory.HARM_CATEGORY_HARASSMENT,
         threshold: HarmBlockThreshold.BLOCK_NONE
     }
- ]
+]
 
 // gemini summarizer
 const geminiSummarize = async (posts, customPrompt) => {
@@ -83,6 +83,7 @@ const geminiSummarize = async (posts, customPrompt) => {
         { role: 'model', parts: [{ text: 'Understood' }] }
     ]
     try {
+        console.log('israelTime:', israelTime)
         const content = JSON.stringify({
             current_time: israelTime,
             posts
