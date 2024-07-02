@@ -15,6 +15,14 @@ const israelTime = new Date().toLocaleTimeString('en-US', {
     hour12: true
 })
 
+const displayIsraelTime = () => {
+    let [time, period] = israelTime.split(' ')
+    let [hour, minutes, seconds] = time.split(':')
+    hour = (hour === '12' ? 11 : hour - 1) || 12
+    period = hour === 12 ? (period === 'AM' ? 'PM' : 'AM') : period
+    return `${hour}:${minutes}:${seconds} ${period} - ${time} ${period}`
+}
+
 // translator default: Hebrew
 const transcribe = (text) => translate(text, { to: 'iw' }).catch((err) => err.message)
 
@@ -83,11 +91,7 @@ const geminiSummarize = async (posts, customPrompt) => {
         { role: 'model', parts: [{ text: 'Understood' }] }
     ]
     try {
-        console.log('israelTime:', israelTime)
-        const content = JSON.stringify({
-            current_time: israelTime,
-            posts
-        })
+        const content = JSON.stringify(posts)
         const chat = model.startChat({
             history: messages,
             generationConfig: {
@@ -102,4 +106,4 @@ const geminiSummarize = async (posts, customPrompt) => {
     }
 }
 
-module.exports = { convertMs, fetch, transcribe, formatSeconds, geminiSummarize }
+module.exports = { convertMs, fetch, transcribe, formatSeconds, geminiSummarize, israelTime, displayIsraelTime }

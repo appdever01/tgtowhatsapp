@@ -1,4 +1,4 @@
-const { fetch, transcribe, formatSeconds, geminiSummarize } = require('./lib/utils')
+const { fetch, transcribe, formatSeconds, geminiSummarize, displayIsraelTime } = require('./lib/utils')
 const { readFile, writeFile } = require('./lib/handler')
 const {
     default: Baileys,
@@ -135,7 +135,7 @@ const start = async () => {
                             const summary = await geminiSummarize(captions)
                             console.log('summary: %d', summary.length)
                             await client.sendMessage(adminGroup, {
-                                text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n${summary}`
+                                text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n*Time:* ${displayIsraelTime()}\n\n${summary}`
                             })
                             if (!/gemini failed/i.test(summary)) {
                                 summaries.push(summary)
