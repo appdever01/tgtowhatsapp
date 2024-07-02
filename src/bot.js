@@ -110,7 +110,7 @@ const start = async () => {
             if (!ready) client.log('ID required type /id in group', true)
             else {
                 const totalChannels = groups.reduce((sum, group) => sum + group.channels.length, 0)
-                const delayPerChannel = Math.floor((3 * 60 * 1000) / totalChannels)
+                const delayPerChannel = Math.floor((20 * 60 * 1000) / totalChannels)
                 client.log(`Total Channels: ${totalChannels}, Delay per Channel: ${formatSeconds(delayPerChannel)}`)
                 const scheduleFetch = () => {
                     for (const group of groups) {
@@ -149,9 +149,9 @@ const start = async () => {
                 // initial fetch channels
                 scheduleFetch()
                 // schedule fetch channels every 20 minutes
-                schedule('*/15 * * * *', scheduleFetch)
+                schedule('*/20 * * * *', scheduleFetch)
                 // schedule summarize channels every 1hr
-                schedule('1 * * *', summarizeChannels)
+                schedule('* 1 * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
                 schedule('0 0 * * *', () => writeFile('summaries.json', []))
             }
@@ -204,8 +204,10 @@ const start = async () => {
                 if (!mods.includes(M.sender)) return void M.reply('Only mods can use it')
                 if (!summaries.length)
                     return void M.reply('Pre-generated summaries are not available.')
-                const summary = await geminiSummarize(summaries, summaryPrompt)
-                console.log('summary: %d of %d', summary.length, summaries.length)
+                if (context && Number(context))
+                    return void M.reply(`Pre-Summary: ${summaries[context - 1]}`)
+                const summary = await geminiSummarize(summaries.slice(-10), summaryPrompt)
+                console.log('summary: %d of %d', summary.length, summaries.length / 10)
                 return void M.reply(summary)
             }
         }
