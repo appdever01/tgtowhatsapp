@@ -1,8 +1,27 @@
 const axios = require('axios').default
 const { load } = require('cheerio')
-const translate = require('translate-google')
+const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require('@google/generative-ai')
 const { readFileSync } = require('fs-extra')
+const { gemini } = require('../getConfig')()
+const translate = require('translate-google')
+
 const prompt = readFileSync('./src/prompts/messages.txt', 'utf8')
+
+const israelTime = new Date().toLocaleTimeString('en-US', {
+    timeZone: 'Asia/Jerusalem',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+})
+
+const displayIsraelTime = () => {
+    let [time, period] = israelTime.split(' ')
+    let [hour, minutes, seconds] = time.split(':')
+    hour = (hour === '12' ? 11 : hour - 1) || 12
+    period = hour === 12 ? (period === 'AM' ? 'PM' : 'AM') : period
+    return `${hour}:${minutes}:${seconds} ${period} - ${time} ${period}`
+}
 
 // translator default: Hebrew
 const transcribe = (text) => translate(text, { to: 'iw' }).catch((err) => err.message)
@@ -44,18 +63,35 @@ const formatSeconds = (ms) => new Date(ms).toISOString().substr(14, 5)
 // formatting text for wa markdown
 const clean = (text) => text.replace(/\*{2,3}(.*?)\*{2,3}/g, '*$1*')
 
+const safetySettings = [
+    {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_NONE
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE
+    }
+]
+
 // gemini summarizer
-const geminiSummarize = async (model, posts, customPrompt) => {
+const geminiSummarize = async (posts, customPrompt) => {
+    const apiKey = gemini[Math.floor(Math.random() * gemini.length)]
+    const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: 'gemini-1.5-flash', safetySettings })
     const messages = [
         { role: 'user', parts: [{ text: customPrompt || prompt }] },
         { role: 'model', parts: [{ text: 'Understood' }] }
     ]
     try {
-        const time = new Date(new Date().getTime()).toLocaleTimeString()
-        const content = JSON.stringify({
-            current_time: time,
-            posts
-        })
+        const content = JSON.stringify(posts)
         const chat = model.startChat({
             history: messages,
             generationConfig: {
@@ -70,4 +106,4 @@ const geminiSummarize = async (model, posts, customPrompt) => {
     }
 }
 
-module.exports = { convertMs, fetch, transcribe, formatSeconds, geminiSummarize }
+module.exports = { convertMs, fetch, transcribe, formatSeconds, geminiSummarize, israelTime, displayIsraelTime }
