@@ -1,5 +1,8 @@
 const { fetch, transcribe, formatSeconds, geminiSummarize, displayIsraelTime } = require('./lib/utils')
 const { readFile, writeFile } = require('./lib/handler')
+const axios = require('axios').default
+const TelegramBot = require('node-telegram-bot-api')
+const token = '6980180034:AAGSHfIQk7PNHU4yQLnY5WilpO4VxwlwJcA'
 const {
     default: Baileys,
     delay,
@@ -111,7 +114,7 @@ const start = async () => {
             if (!ready) client.log('ID required type /id in group', true)
             else {
                 const totalChannels = groups.reduce((sum, group) => sum + group.channels.length, 0)
-                const delayPerChannel = Math.floor((20 * 60 * 1000) / totalChannels)
+                const delayPerChannel = Math.floor((2 * 60 * 1000) / totalChannels)
                 client.log(`Total Channels: ${totalChannels}, Delay per Channel: ${formatSeconds(delayPerChannel)}`)
                 const scheduleFetch = () => {
                     for (const group of groups) {
@@ -151,7 +154,7 @@ const start = async () => {
                 // initial fetch channels
                 scheduleFetch()
                 // schedule fetch channels every 20 minutes
-                schedule('*/20 * * * *', scheduleFetch)
+                schedule('*/10 * * * *', scheduleFetch)
                 // schedule summarize channels not every hour but the hour of the day
                 schedule('0 * * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
@@ -258,6 +261,22 @@ const start = async () => {
                     text = `*${channel}*\n\n${text}`
                     const replyData = type === 'text' ? text : { url: mediaUrl }
                     await delay(5000 * messageIndex)
+                    console.log(`From:::: ${from}`)
+                    console.log(`ReplyData:::: ${JSON.stringify(replyData)}`)
+                    console.log(`type:::: ${type}`)
+                    console.log(`Text:::: ${text}`)
+                    const chn = '-1002006677292'
+                    if (type == 'text') {
+                        bot.sendMessage(chn, text)
+                    } else if (type == 'image') {
+                        bot.sendPhoto(chn, replyData.url, {
+                            caption: text
+                        })
+                    } else if (type == 'video') {
+                        bot.sendVideo(chn, replyData.url, {
+                            caption: text
+                        })
+                    }
                     await reply(from, replyData, type, text)
                 })
                 store[channel] = messagesToSend.pop().id
@@ -273,6 +292,22 @@ const start = async () => {
                 store[channel] = id
                 writeFile('store.json', store)
                 const replyData = type === 'text' ? text : { url: mediaUrl }
+                console.log(`From:::: ${from}`)
+                console.log(`ReplyData:::: ${JSON.stringify(replyData)}`)
+                console.log(`type:::: ${type}`)
+                console.log(`Text:::: ${text}`)
+                const chn = '-1002006677292'
+                if (type == 'text') {
+                    bot.sendMessage(chn, text)
+                } else if (type == 'image') {
+                    bot.sendPhoto(chn, replyData.url, {
+                        caption: text
+                    })
+                } else if (type == 'video') {
+                    bot.sendVideo(chn, replyData.url, {
+                        caption: text
+                    })
+                }
                 await reply(from, replyData, type, text)
             }
         })
