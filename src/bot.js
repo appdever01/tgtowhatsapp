@@ -1,5 +1,10 @@
-const { fetch, transcribe, formatSeconds, geminiSummarize } = require('./lib/utils')
+const { fetch, transcribe, formatSeconds, geminiSummarize, displayIsraelTime } = require('./lib/utils')
 const { readFile, writeFile } = require('./lib/handler')
+const axios = require('axios').default
+const TelegramBot = require('node-telegram-bot-api')
+const token = '6980180034:AAGSHfIQk7PNHU4yQLnY5WilpO4VxwlwJcA'
+const bot = new TelegramBot(token, { polling: true })
+
 const {
     default: Baileys,
     delay,
@@ -110,7 +115,7 @@ const start = async () => {
             if (!ready) client.log('ID required type /id in group', true)
             else {
                 const totalChannels = groups.reduce((sum, group) => sum + group.channels.length, 0)
-                const delayPerChannel = Math.floor((20 * 60 * 1000) / totalChannels)
+                const delayPerChannel = Math.floor((1 * 60 * 1000) / totalChannels)
                 client.log(`Total Channels: ${totalChannels}, Delay per Channel: ${formatSeconds(delayPerChannel)}`)
                 const scheduleFetch = () => {
                     for (const group of groups) {
@@ -132,9 +137,10 @@ const start = async () => {
                     try {
                         for (const [channel, messages] of Object.entries(messageStone)) {
                             const captions = messages.map((content) => content.caption)
-                            const summary = await geminiSummarize(captions)
-                            console.log('summary: %d', summary.length)
-                            await client.sendMessage(adminGroup, { text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n${summary}` })
+                            const summary = await geminiSummarize(model, captions)
+                            await client.sendMessage(adminGroup, {
+                                text: `*שם משתמש:* ${channel}\n*Total messages:* ${messages.length}\n\n${summary}`
+                            })
                             if (!/gemini failed/i.test(summary)) {
                                 summaries.push(summary)
                                 delete messageStone[channel]
@@ -149,8 +155,8 @@ const start = async () => {
                 // initial fetch channels
                 scheduleFetch()
                 // schedule fetch channels every 20 minutes
-                schedule('*/20 * * * *', scheduleFetch)
-                // schedule summarize channels every 1hr
+                schedule('*/1 * * * *', scheduleFetch)
+                // schedule summarize channels not every hour but the hour of the day
                 schedule('0 * * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
                 schedule('0 0 * * *', () => writeFile('summaries.json', []))
@@ -202,10 +208,13 @@ const start = async () => {
             case 'news':
             case 'state': {
                 if (!mods.includes(M.sender)) return void M.reply('Only mods can use it')
-                if (!summaries.length)
-                    return void M.reply('Pre-generated summaries are not available.')
-                const summary = await geminiSummarize(summaries, summaryPrompt)
-                console.log('summary: %d of %d', summary.length, summaries.length)
+                if (!summaries.length) return void M.reply('Pre-generated summaries are not available.')
+                if (context && Number(context)) {
+                    const collect = summaries.reverse()
+                    return void M.reply(`Pre-Summary: ${collect[context - 1]}`)
+                }
+                const summary = await geminiSummarize(summaries.slice(-10), summaryPrompt)
+                console.log('summary: %d of %d', summary.length, summaries.length / 10)
                 return void M.reply(summary)
             }
         }
@@ -253,6 +262,22 @@ const start = async () => {
                     text = `*${channel}*\n\n${text}`
                     const replyData = type === 'text' ? text : { url: mediaUrl }
                     await delay(5000 * messageIndex)
+                    console.log(`From:::: ${from}`)
+                    console.log(`ReplyData:::: ${JSON.stringify(replyData)}`)
+                    console.log(`type:::: ${type}`)
+                    console.log(`Text:::: ${text}`)
+                    const chn = '-1002006677292'
+                    if (type == 'text') {
+                        bot.sendMessage(chn, text)
+                    } else if (type == 'image') {
+                        bot.sendPhoto(chn, replyData.url, {
+                            caption: text
+                        })
+                    } else if (type == 'video') {
+                        bot.sendVideo(chn, replyData.url, {
+                            caption: text
+                        })
+                    }
                     await reply(from, replyData, type, text)
                 })
                 store[channel] = messagesToSend.pop().id
@@ -268,6 +293,22 @@ const start = async () => {
                 store[channel] = id
                 writeFile('store.json', store)
                 const replyData = type === 'text' ? text : { url: mediaUrl }
+                console.log(`From:::: ${from}`)
+                console.log(`ReplyData:::: ${JSON.stringify(replyData)}`)
+                console.log(`type:::: ${type}`)
+                console.log(`Text:::: ${text}`)
+                const chn = '-1002006677292'
+                if (type == 'text') {
+                    bot.sendMessage(chn, text)
+                } else if (type == 'image') {
+                    bot.sendPhoto(chn, replyData.url, {
+                        caption: text
+                    })
+                } else if (type == 'video') {
+                    bot.sendVideo(chn, replyData.url, {
+                        caption: text
+                    })
+                }
                 await reply(from, replyData, type, text)
             }
         })
