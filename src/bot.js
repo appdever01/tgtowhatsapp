@@ -137,9 +137,10 @@ const start = async () => {
                     try {
                         for (const [channel, messages] of Object.entries(messageStone)) {
                             const captions = messages.map((content) => content.caption)
-                            const summary = await geminiSummarize(model, captions)
+                            const summary = await geminiSummarize(captions)
+                            console.log('summary: %d', summary.length)
                             await client.sendMessage(adminGroup, {
-                                text: `*שם משתמש:* ${channel}\n*Total messages:* ${messages.length}\n\n${summary}`
+                                text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n*Time:* ${displayIsraelTime()}\n\n${summary}`
                             })
                             if (!/gemini failed/i.test(summary)) {
                                 summaries.push(summary)
