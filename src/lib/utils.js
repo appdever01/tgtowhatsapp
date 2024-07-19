@@ -91,7 +91,8 @@ const geminiSummarize = async (posts, customPrompt) => {
         { role: 'model', parts: [{ text: 'Understood' }] }
     ]
     try {
-        const content = JSON.stringify(posts)
+         const content = JSON.stringify(posts)
+        const truncatedContent = content.length > 3000 ? content.substring(0, 3000) : content // Truncate content if it exceeds 3000 characters
         const chat = model.startChat({
             history: messages,
             generationConfig: {
@@ -101,8 +102,8 @@ const geminiSummarize = async (posts, customPrompt) => {
         const { response } = await chat.sendMessage(content)
         return clean(response.text())
     } catch (error) {
-        console.log(error.message)
-        return 'Gemini failed: ' + error.message
+        console.log(error)
+        return 'Gemini failed : Can\'t summarize this!!'
     }
 }
 
