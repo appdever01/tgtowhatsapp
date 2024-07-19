@@ -155,7 +155,7 @@ const start = async () => {
                 // initial fetch channels
                 scheduleFetch()
                 // schedule fetch channels every 20 minutes
-                schedule('*/5 * * * *', scheduleFetch)
+                schedule('*/3 * * * *', scheduleFetch)
                 // schedule summarize channels not every hour but the hour of the day
                 schedule('*/10 * * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
