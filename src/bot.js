@@ -140,7 +140,7 @@ const start = async () => {
                             const summary = await geminiSummarize(captions)
                             console.log('summary: %d', summary.length)
                             await client.sendMessage(adminGroup, {
-                                text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n*Time:* ${displayIsraelTime()}\n\n${summary}`
+                                text: `*שם משתמש:* ${channel}\n*סה"כ הודעות:* ${messages.length}\n\n*זמן:* ${displayIsraelTime()}\n\n${summary}`
                             })
                             if (!/gemini failed/i.test(summary)) {
                                 summaries.push(summary)
