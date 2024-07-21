@@ -102,7 +102,25 @@ const geminiSummarize = async (posts, customPrompt) => {
         const { response } = await chat.sendMessage(content)
         return clean(response.text())
     } catch (error) {
-        console.log(error)
+        console.log(error.response)
+         if (error.message.includes('500 Internal Server Error')) {
+            console.log('500 Internal server error ')
+             try {
+                    const content = JSON.stringify(posts)
+                    const truncatedContent = content.length > 3000 ? content.substring(0, 3000) : content // Truncate content if it exceeds 3000 characters
+                    const chat = model.startChat({
+                        history: messages,
+                        generationConfig: {
+                            maxOutputTokens: 4096
+                        }
+                    })
+                    const { response } = await chat.sendMessage(content)
+                    return clean(response.text())
+                } catch {
+                    console.log(error.message)
+
+                }
+         }
         return 'Gemini failed : Can\'t summarize this!!'
     }
 }
