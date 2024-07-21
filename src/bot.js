@@ -116,7 +116,7 @@ const start = async () => {
             else {
                 const totalChannels = groups.reduce((sum, group) => sum + group.channels.length, 0)
                 const delayPerChannel = Math.floor((5 * 60 * 1000) / totalChannels)
-                client.log(`Total Channels: ${totalChannels}, Delay per Channel: ${formatSeconds(delayPerChannel)}`)
+                // client.log(`Total Channels: ${totalChannels}, Delay per Channel: ${formatSeconds(delayPerChannel)}`)
                 const scheduleFetch = () => {
                     for (const group of groups) {
                         for (let i = 0; i < group.channels.length; i++) {
@@ -156,9 +156,9 @@ const start = async () => {
                 // initial fetch channels
                 scheduleFetch()
                 // schedule fetch channels every 20 minutes
-                schedule('*/5 * * * *', scheduleFetch)
+                schedule('*/10 * * * *', scheduleFetch)
                 // schedule summarize channels not every hour but the hour of the day
-                schedule('0 * * * *', summarizeChannels)
+                schedule('*/10 * * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
                 schedule('0 0 * * *', () => writeFile('summaries.json', []))
             }
@@ -200,7 +200,7 @@ const start = async () => {
             case 'role':
             case 'categorize': {
                 if (!mods.includes(M.sender)) return void M.reply('Only mods can use it')
-                if (!context) return void M.reply('Provide a keyword, Baka!')
+                if (!context) return void M.reply('Provide a keyword!')
                 const [role, element] = context.trim().split('|')
                 if (!role || !element) return void M.reply('Do role|element')
                 const roles = updateWords(role.trim().toLowerCase(), element)
@@ -232,14 +232,14 @@ const start = async () => {
 
     const fetchChannels = async ({ from, channels }) => {
         const promises = channels.map(async (channel) => {
-            client.log(`Checking... ${chalk.yellowBright(channel)}`)
+            // client.log(`Checking... ${chalk.yellowBright(channel)}`)
             const messages = await fetch(channel).catch(() => {
                 client.log('API is busy at the moment, try again later', true)
                 return void null
             })
             if (!messages.length) {
                 // removeInvalidChannel(from, channel)
-                client.log(`Invalid ${channel} removed`, true)
+                // client.log(`Invalid ${channel} removed`, true)
                 return void null
             }
             const previousId = store[channel] || 0
@@ -263,10 +263,7 @@ const start = async () => {
                     text = `*${channel}*\n\n${text}`
                     const replyData = type === 'text' ? text : { url: mediaUrl }
                     await delay(5000 * messageIndex)
-                    console.log(`From:::: ${from}`)
-                    console.log(`ReplyData:::: ${JSON.stringify(replyData)}`)
-                    console.log(`type:::: ${type}`)
-                    console.log(`Text:::: ${text}`)
+                  
                     const chn = '-1002006677292'
                     if (type == 'text') {
                         bot.sendMessage(chn, text)
@@ -294,10 +291,7 @@ const start = async () => {
                 store[channel] = id
                 writeFile('store.json', store)
                 const replyData = type === 'text' ? text : { url: mediaUrl }
-                console.log(`From:::: ${from}`)
-                console.log(`ReplyData:::: ${JSON.stringify(replyData)}`)
-                console.log(`type:::: ${type}`)
-                console.log(`Text:::: ${text}`)
+              
                 const chn = '-1002006677292'
                 if (type == 'text') {
                     bot.sendMessage(chn, text)
