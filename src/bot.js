@@ -253,7 +253,7 @@ const start = async () => {
             if (index !== -1) {
                 const messagesToSend = messages.slice(index + 1)
                 if (!messagesToSend.length) {
-                    client.log(`No new messages ${channel}`)
+                    // client.log(`No new messages ${channel}`)
                     return void null
                 }
                 messagesToSend.forEach(async (message, messageIndex) => {
