@@ -1,5 +1,6 @@
 const { fetch, transcribe, formatSeconds, geminiSummarize, displayIsraelTime } = require('./lib/utils')
 const { readFile, writeFile } = require('./lib/handler')
+const TelegramAPI = require('node-telegram-bot-api')
 const {
     default: Baileys,
     delay,
@@ -16,7 +17,10 @@ const chalk = require('chalk')
 const P = require('pino')
 
 // configuration
-const { prefix, port, mods, adminGroup } = require('./getConfig')()
+const { prefix, port, mods, adminGroup, token, telegramGroup } = require('./getConfig')()
+
+// telegram bot configuration
+const bot = new TelegramAPI(token, { polling: true })
 
 // custom summary prompt
 const summaryPrompt = readFileSync('./src/prompts/summary.txt', 'utf8')
@@ -31,14 +35,6 @@ const messageStone = readFile('messages.json')
 // load all channels
 const getChannels = () => {
     groups.forEach((group) => (group.channels = group.channels.map((channel) => channel.toLowerCase())))
-    writeFile('groups.json', groups)
-}
-
-// remove invalid channel username
-const removeInvalidChannel = (from, channel) => {
-    const group = groups.find((group) => group.from === from)
-    const index = group.channels.indexOf(channel.toLowerCase())
-    group.channels.splice(index, 1)
     writeFile('groups.json', groups)
 }
 
@@ -110,7 +106,7 @@ const start = async () => {
             if (!ready) client.log('ID required type /id in group', true)
             else {
                 const totalChannels = groups.reduce((sum, group) => sum + group.channels.length, 0)
-                const delayPerChannel = Math.floor((20 * 60 * 1000) / totalChannels)
+                const delayPerChannel = Math.floor((5 * 60 * 1000) / totalChannels)
                 client.log(`Total Channels: ${totalChannels}, Delay per Channel: ${formatSeconds(delayPerChannel)}`)
                 const scheduleFetch = () => {
                     for (const group of groups) {
@@ -132,10 +128,14 @@ const start = async () => {
                     try {
                         for (const [channel, messages] of Object.entries(messageStone)) {
                             const captions = messages.map((content) => content.caption)
+                            if (!captions.length) {
+                                delete messageStone[channel]
+                                return null
+                            }
                             const summary = await geminiSummarize(captions)
                             console.log('summary: %d', summary.length)
                             await client.sendMessage(adminGroup, {
-                                text: `*Username:* ${channel}\n*Total messages:* ${messages.length}\n\n*Time:* ${displayIsraelTime()}\n\n${summary}`
+                                text: `*שם משתמש:* ${channel}\n*סה"כ הודעות:* ${messages.length}\n\n*זמן:* ${displayIsraelTime()}\n\n${summary}`
                             })
                             if (!/gemini failed/i.test(summary)) {
                                 summaries.push(summary)
@@ -151,7 +151,7 @@ const start = async () => {
                 // initial fetch channels
                 scheduleFetch()
                 // schedule fetch channels every 20 minutes
-                schedule('*/20 * * * *', scheduleFetch)
+                schedule('*/10 * * * *', scheduleFetch)
                 // schedule summarize channels not every hour but the hour of the day
                 schedule('0 * * * *', summarizeChannels)
                 // schedule to reset summary at midnight every day
@@ -195,7 +195,7 @@ const start = async () => {
             case 'role':
             case 'categorize': {
                 if (!mods.includes(M.sender)) return void M.reply('Only mods can use it')
-                if (!context) return void M.reply('Provide a keyword, Baka!')
+                if (!context) return void M.reply('Provide a keyword!')
                 const [role, element] = context.trim().split('|')
                 if (!role || !element) return void M.reply('Do role|element')
                 const roles = updateWords(role.trim().toLowerCase(), element)
@@ -225,18 +225,23 @@ const start = async () => {
         })
     }
 
+    const sendMessage = async (content, type, caption) => {
+        const TypesMap = {
+            text: 'sendMessage',
+            image: 'sendPhoto',
+            video: 'sendVideo'
+        }
+        const method = TypesMap[type]
+        return bot[method](telegramGroup, type === 'text' ? caption : content, type === 'text' ? {} : { caption })
+    }
+
     const fetchChannels = async ({ from, channels }) => {
         const promises = channels.map(async (channel) => {
-            client.log(`Checking... ${chalk.yellowBright(channel)}`)
             const messages = await fetch(channel).catch(() => {
                 client.log('API is busy at the moment, try again later', true)
                 return void null
             })
-            if (!messages.length) {
-                // removeInvalidChannel(from, channel)
-                client.log(`Invalid ${channel} removed`, true)
-                return void null
-            }
+            if (!messages.length) return void null
             const previousId = store[channel] || 0
             const index = messages.findIndex((message) => message.id === previousId)
             if ((previousId && index === -1) || previousId > messages.pop().id) {
@@ -247,10 +252,7 @@ const start = async () => {
             }
             if (index !== -1) {
                 const messagesToSend = messages.slice(index + 1)
-                if (!messagesToSend.length) {
-                    client.log(`No new messages ${channel}`)
-                    return void null
-                }
+                if (!messagesToSend.length) return void null
                 messagesToSend.forEach(async (message, messageIndex) => {
                     addMessage(channel, message)
                     const { type, caption, mediaUrl } = message
@@ -258,6 +260,7 @@ const start = async () => {
                     text = `*${channel}*\n\n${text}`
                     const replyData = type === 'text' ? text : { url: mediaUrl }
                     await delay(5000 * messageIndex)
+                    await sendMessage(mediaUrl, type, text)
                     await reply(from, replyData, type, text)
                 })
                 store[channel] = messagesToSend.pop().id
@@ -273,6 +276,7 @@ const start = async () => {
                 store[channel] = id
                 writeFile('store.json', store)
                 const replyData = type === 'text' ? text : { url: mediaUrl }
+                await sendMessage(mediaUrl, type, text)
                 await reply(from, replyData, type, text)
             }
         })
