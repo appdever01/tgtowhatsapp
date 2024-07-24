@@ -13,7 +13,6 @@
     "telegram",
     "bot"
   ],
-  "author": "AliAryanTech",
   "dependencies": {
     "@google/generative-ai": "^0.14.0",
     "@hapi/boom": "^10.0.1",
