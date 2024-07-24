@@ -267,7 +267,7 @@ const start = async () => {
                     let text = await transcribe(caption)
                     text = `*${channel}*\n\n${text}`
                     const replyData = type === 'text' ? text : { url: mediaUrl }
-                    await delay(5000 * messageIndex)
+                    await delay(10000 * messageIndex)
                     await sendMessage(mediaUrl, type, text)
                     await reply(from, replyData, type, text)
                 })
