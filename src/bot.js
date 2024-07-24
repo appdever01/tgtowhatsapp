@@ -224,7 +224,7 @@ const start = async () => {
             caption
         })
     }
-    await reply('2347049972537@s', `${displayIsraelTime()}`)
+   
 
     const sendMessage = async (content, type, caption) => {
         const TypesMap = {
