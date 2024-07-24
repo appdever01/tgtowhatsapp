@@ -173,6 +173,8 @@ const start = async () => {
         switch (cmd) {
             case 'id':
                 return void M.reply(M.from)
+            case 'time':
+                 return void M.reply(`${displayIsraelTime()}`)
             case 'list': {
                 if (!mods.includes(M.sender)) return void M.reply('Only mods can use it')
                 if (!(words.keywords || []).length) return void M.reply('No keywords found')
