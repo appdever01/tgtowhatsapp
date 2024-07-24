@@ -22,7 +22,7 @@ const displayIsraelTime = () => {
     period = hour === 12 ? (period === 'AM' ? 'PM' : 'AM') : period
     return `${hour}:${minutes}:${seconds} ${period} - ${time} ${period}`
 }
-console.log(displayIsraelTime)
+console.log(displayIsraelTime())
 
 // translator default: Hebrew
 const transcribe = (text) => translate(text, { to: 'iw' }).catch((err) => err.message)
