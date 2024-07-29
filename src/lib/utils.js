@@ -7,15 +7,16 @@ const translate = require('translate-google')
 
 const prompt = readFileSync('./src/prompts/messages.txt', 'utf8')
 
-const israelTime = new Date().toLocaleTimeString('en-US', {
-    timeZone: 'Asia/Jerusalem',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-})
 
 const displayIsraelTime = () => {
+    const israelTime = new Date().toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Jerusalem',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    })
+
     let [time, period] = israelTime.split(' ')
     let [hour, minutes, seconds] = time.split(':')
     hour = (hour === '12' ? 11 : hour - 1) || 12
