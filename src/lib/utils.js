@@ -127,4 +127,4 @@ const geminiSummarize = async (posts, customPrompt) => {
     }
 }
 
-module.exports = { convertMs, fetch, transcribe, formatSeconds, geminiSummarize, israelTime, displayIsraelTime }
+module.exports = { convertMs, fetch, transcribe, formatSeconds, geminiSummarize, displayIsraelTime }
