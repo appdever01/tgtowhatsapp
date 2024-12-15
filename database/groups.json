@@ -1,10 +1,10 @@
 [
     {
-        "from": "",
+        "from": "120363379623271947@g.us",
         "channels": ["jeninqassamm", "jeninnews1", "jeniincamp", "jenencamb", "a7rarjenin", "rueib_alkian", "alahbab11"]
     },
     {
-        "from": "",
+        "from": "120363378256475978@g.us",
         "channels": [
             "bethlahem_alhadath",
             "bethlehemnewss",
@@ -16,7 +16,7 @@
         ]
     },
     {
-        "from": "",
+        "from": "120363378271826715@g.us",
         "channels": [
             "bethlahem_alhadath",
             "bethlehemnewss",
@@ -28,31 +28,31 @@
         ]
     },
     {
-        "from": "",
+        "from": "120363376757351645@g.us",
         "channels": ["ahrar_qalqilia", "qalqilya_alhadath", "qalqilianewss", "habla_0"]
     },
     {
-        "from": "",
+        "from": "120363378500115486@g.us",
         "channels": ["nanlugher", "nablus_2", "nablus_5", "nablus_ps"]
     },
     {
-        "from": "",
+        "from": "120363377351578603@g.us",
         "channels": ["ramallahmix1", "ramallahnew", "ramallahnewss", "alersalps", "sawtalmughayyir"]
     },
     {
-        "from": "",
+        "from": "120363358693983734@g.us",
         "channels": ["from_hebron", "khalelnews", "hebmix", "httpschildrenpalestin"]
     },
     {
-        "from": "",
+        "from": "120363358231847768@g.us",
         "channels": ["tubastimes", "tubasal_majd", "a7rartobas", "qassami_new", "tubasalkdraa", "tubasgate", "tubas101"]
     },
     {
-        "from": "",
+        "from": "120363378331174960@g.us",
         "channels": ["selfetnews", "radioalzaytona", "selfetnewss", "shadyslf", "omarabulila", "a5barsalfeet"]
     },
     {
-        "from": "",
+        "from": "120363374789313852@g.us",
         "channels": [
             "ra_50_mm",
             "jerichocm/22379",
@@ -64,7 +64,7 @@
         ]
     },
     {
-        "from": "",
+        "from": "120363379063750246@g.us",
         "channels": [
             "a7rartullkarm",
             "sarayatulkarm",
@@ -76,15 +76,13 @@
         ]
     },
     {
-        "from": "",
+        "from": "120363376371853049@g.us",
         "channels": ["ttu_sanfur_tiqni", "midanalasima", "alasimaanews", "alasiman", "sawtalasema", "alasmahps"]
     },
     {
-        "from": "",
+        "from": "120363359168245650@g.us",
         "channels": [
             "abudees",
-            "abodis12828",
-            "batternew",
             "livequds",
             "qastalnews",
             "pales_jerus",
@@ -96,15 +94,15 @@
         ]
     },
     {
-        "from": "",
+        "from": "120363359897059209@g.us",
         "channels": ["cnnturkcomtr", "haberturkz", "buzznews_tr", "trhaberl", "turkeys_news", "bpthaber"]
     },
     {
-        "from": "",
+        "from": "120363361194787071@g.us",
         "channels": ["almayadeen", "nahermedia", "irivf", "alarabytelevision"]
     },
     {
-        "from": "",
+        "from": "120363378297334283@g.us",
         "channels": [
             "sananewsenglish",
             "syrianarabnewsagency",
@@ -115,7 +113,7 @@
         ]
     },
     {
-        "from": "120363177396991267@g.us",
+        "from": "120363376720103250@g.us",
         "channels": [
             "molakhasatekhbarya",
             "epochtimespersian",
@@ -128,19 +126,19 @@
         ]
     },
     {
-        "from": "120363179107004908@g.us",
+        "from": "120363378551303058@g.us",
         "channels": ["lebanonnews2", "news247leb", "janoubia_news", "lebupdate"]
     },
     {
-        "from": "",
+        "from": "120363377390265647@g.us",
         "channels": ["alarabiya", "ajanews", "ajmubasher", "ajpalestine", "allnazihunter"]
     },
     {
-        "from": "",
+        "from": "120363356482038323@g.us",
         "channels": ["saudinews50", "sabq24news", "arabi21news", "almowatennew", "hayat_alshaid1"]
     },
     {
-        "from": "",
+        "from": "120363363824092443@g.us",
         "channels": ["ahd_albahaa", "wahediraq"]
     }
 ]
