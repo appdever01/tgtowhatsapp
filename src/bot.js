@@ -174,7 +174,7 @@ const start = async () => {
             case 'id':
                 return void M.reply(M.from)
             case 'time':
-                 return void M.reply(`${displayIsraelTime()}`)
+                return void M.reply(`${displayIsraelTime()}`)
             case 'list': {
                 if (!mods.includes(M.sender)) return void M.reply('Only mods can use it')
                 if (!(words.keywords || []).length) return void M.reply('No keywords found')
@@ -219,76 +219,98 @@ const start = async () => {
     })
 
     const reply = async (from, content, type = 'text', caption) => {
-        client.log(`wa_message: ${type}`)
-        if (type === 'text' && Buffer.isBuffer(content)) throw new Error('Cannot send a Buffer as a text message')
-        return client.sendMessage(from, {
-            [type]: content,
-            caption
-        })
+        try {
+            client.log(`wa_message: ${type}`)
+            if (type === 'text' && Buffer.isBuffer(content)) {
+                throw new Error('Cannot send a Buffer as a text message')
+            }
+            return await client.sendMessage(from, {
+                [type]: content,
+                caption
+            })
+        } catch (error) {
+            client.log(`Failed to send WhatsApp message: ${error.message}`, true)
+            if (error.message === 'Connection Closed') {
+                client.log('Attempting to reconnect...', true)
+                await delay(3000)
+                return reply(from, content, type, caption)
+            }
+        }
     }
-   
 
     const sendMessage = async (content, type, caption) => {
-        const TypesMap = {
-            text: 'sendMessage',
-            image: 'sendPhoto',
-            video: 'sendVideo'
+        try {
+            const TypesMap = {
+                text: 'sendMessage',
+                image: 'sendPhoto',
+                video: 'sendVideo'
+            }
+            const method = TypesMap[type]
+            return await bot[method](
+                telegramGroup,
+                type === 'text' ? caption : content,
+                type === 'text' ? {} : { caption }
+            )
+        } catch (error) {
+            client.log(`Failed to send Telegram message: ${error.message}`, true)
         }
-        const method = TypesMap[type]
-        return bot[method](telegramGroup, type === 'text' ? caption : content, type === 'text' ? {} : { caption })
     }
 
     const fetchChannels = async ({ from, channels }) => {
         const promises = channels.map(async (channel) => {
-            // client.log(`Checking... ${chalk.yellowBright(channel)}`)
-            const messages = await fetch(channel).catch(() => {
-                client.log('API is busy at the moment, try again later', true)
-                return void null
-            })
-            if (!messages.length) {
-                // removeInvalidChannel(from, channel)
-                // client.log(`Invalid ${channel} removed`, true)
-                return void null
-            }
-            const previousId = store[channel] || 0
-            const index = messages.findIndex((message) => message.id === previousId)
-            if ((previousId && index === -1) || previousId > messages.pop().id) {
-                client.log(`Json is Outdated of ${channel}`, true)
-                store[channel] = messages.pop().id
-                writeFile('store.json', store)
-                return void null
-            }
-            if (index !== -1) {
-                const messagesToSend = messages.slice(index + 1)
-                if (!messagesToSend.length) return void null
-                messagesToSend.forEach(async (message, messageIndex) => {
-                    addMessage(channel, message)
-                    const { type, caption, mediaUrl } = message
-                    let text = await transcribe(caption)
-                    text = `*${channel}*\n\n${text}`
-                    const replyData = type === 'text' ? text : { url: mediaUrl }
-                    await delay(10000 * messageIndex)
-                    await sendMessage(mediaUrl, type, text)
-                    await reply(from, replyData, type, text)
+            try {
+                const messages = await fetch(channel).catch(() => {
+                    client.log('API is busy at the moment, try again later', true)
+                    return null
                 })
-                store[channel] = messagesToSend.pop().id
-                writeFile('store.json', store)
-            }
-            if (!previousId && messages.length) {
-                client.log(`Channel store: ${chalk.yellowBright(channel)}`)
-                const firstMessage = messages.pop()
-                addMessage(channel, firstMessage)
-                const { id, type, caption, mediaUrl } = firstMessage
-                let text = await transcribe(caption)
-                text = `*${channel}*\n\n${text}`
-                store[channel] = id
-                writeFile('store.json', store)
-                const replyData = type === 'text' ? text : { url: mediaUrl }
-                await sendMessage(mediaUrl, type, text)
-                await reply(from, replyData, type, text)
+
+                if (!messages || !messages.length) {
+                    return null
+                }
+
+                const previousId = store[channel] || 0
+                const index = messages.findIndex((message) => message.id === previousId)
+
+                if ((previousId && index === -1) || previousId > messages.pop().id) {
+                    client.log(`Json is Outdated of ${channel}`, true)
+                    store[channel] = messages.pop().id
+                    writeFile('store.json', store)
+                    return null
+                }
+
+                if (index !== -1) {
+                    const messagesToSend = messages.slice(index + 1)
+                    if (!messagesToSend.length) return null
+
+                    for (const [messageIndex, message] of messagesToSend.entries()) {
+                        try {
+                            addMessage(channel, message)
+                            const { type, caption, mediaUrl } = message
+                            let text = await transcribe(caption)
+                            text = `*${channel}*\n\n${text}`
+                            const replyData = type === 'text' ? text : { url: mediaUrl }
+                            await delay(10000 * messageIndex)
+                            await sendMessage(mediaUrl, type, text)
+                            await reply(from, replyData, type, text)
+                        } catch (error) {
+                            client.log(`Error processing message: ${error.message}`, true)
+                            continue
+                        }
+                    }
+
+                    store[channel] = messagesToSend.pop().id
+                    writeFile('store.json', store)
+                }
+            } catch (error) {
+                client.log(`Error processing channel ${channel}: ${error.message}`, true)
             }
         })
-        await Promise.all(promises)
+
+        try {
+            await Promise.all(promises)
+        } catch (error) {
+            client.log(`Error in fetchChannels: ${error.message}`, true)
+        }
     }
 
     app.get('/', (req, res) => res.status(200).contentType('image/png').send(client.QR))
