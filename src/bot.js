@@ -105,56 +105,30 @@ const start = async () => {
             const ready = groups.every((group) => group.from)
             if (!ready) client.log('ID required type /id in group', true)
             else {
-                const totalChannels = groups.reduce((sum, group) => sum + group.channels.length, 0)
-                const delayPerChannel = Math.floor((5 * 60 * 1000) / totalChannels)
-                client.log(`Total Channels: ${totalChannels}, Delay per Channel: ${formatSeconds(delayPerChannel)}`)
-                const scheduleFetch = () => {
+                client.log(`Total Channels: ${groups.reduce((sum, group) => sum + group.channels.length, 0)}`)
+
+                for (const group of groups) {
+                    for (const channel of group.channels) {
+                        if (!store[channel]) {
+                            const messages = await fetch(channel).catch(() => null)
+                            if (messages && messages.length) {
+                                store[channel] = messages[messages.length - 1].id
+                            }
+                        }
+                    }
+                }
+                writeFile('store.json', store)
+
+                const pollChannels = async () => {
                     for (const group of groups) {
-                        for (let i = 0; i < group.channels.length; i++) {
-                            setTimeout(
-                                () => fetchChannels({ from: group.from, channels: [group.channels[i]] }),
-                                i * delayPerChannel
-                            )
-                        }
+                        await fetchChannels({ from: group.from, channels: group.channels })
                     }
+                    setTimeout(pollChannels, 5000)
                 }
-                // summarize channels messages in 1hr chunks
-                const summarizeChannels = async () => {
-                    console.log('Running summarizeChannels...')
-                    if (!Object.keys(messageStone).length) {
-                        console.log('messageStone is empty. No channels to summarize.')
-                        return null
-                    }
-                    try {
-                        for (const [channel, messages] of Object.entries(messageStone)) {
-                            const captions = messages.map((content) => content.caption)
-                            if (!captions.length) {
-                                delete messageStone[channel]
-                                return null
-                            }
-                            const summary = await geminiSummarize(captions)
-                            console.log('summary: %d', summary.length)
-                            await client.sendMessage(adminGroup, {
-                                text: `*שם משתמש:* ${channel}\n*סה"כ הודעות:* ${messages.length}\n\n*זמן:* ${displayIsraelTime()}\n\n${summary}`
-                            })
-                            if (!/gemini failed/i.test(summary)) {
-                                summaries.push(summary)
-                                delete messageStone[channel]
-                                writeFile('summaries.json', summaries)
-                            }
-                        }
-                        writeFile('messages.json', messageStone)
-                    } catch (error) {
-                        console.error('Error in summarizeChannels:', error.message)
-                    }
-                }
-                // initial fetch channels
-                scheduleFetch()
-                // schedule fetch channels every 20 minutes
-                schedule('*/10 * * * *', scheduleFetch)
-                // schedule summarize channels not every hour but the hour of the day
+
+                pollChannels()
+
                 schedule('0 * * * *', summarizeChannels)
-                // schedule to reset summary at midnight every day
                 schedule('0 0 * * *', () => writeFile('summaries.json', []))
             }
         }
@@ -259,37 +233,21 @@ const start = async () => {
     const fetchChannels = async ({ from, channels }) => {
         const promises = channels.map(async (channel) => {
             try {
-                const messages = await fetch(channel).catch(() => {
-                    client.log('API is busy at the moment, try again later', true)
-                    return null
-                })
-
-                if (!messages || !messages.length) {
-                    return null
-                }
+                const messages = await fetch(channel).catch(() => null)
+                if (!messages || !messages.length) return null
 
                 const previousId = store[channel] || 0
-                const index = messages.findIndex((message) => message.id === previousId)
+                const newMessages = messages.filter((msg) => msg.id > previousId)
 
-                if ((previousId && index === -1) || previousId > messages.pop().id) {
-                    client.log(`Json is Outdated of ${channel}`, true)
-                    store[channel] = messages.pop().id
-                    writeFile('store.json', store)
-                    return null
-                }
-
-                if (index !== -1) {
-                    const messagesToSend = messages.slice(index + 1)
-                    if (!messagesToSend.length) return null
-
-                    for (const [messageIndex, message] of messagesToSend.entries()) {
+                if (newMessages.length > 0) {
+                    for (const message of newMessages) {
                         try {
                             addMessage(channel, message)
                             const { type, caption, mediaUrl } = message
                             let text = await transcribe(caption)
                             text = `*${channel}*\n\n${text}`
                             const replyData = type === 'text' ? text : { url: mediaUrl }
-                            await delay(10000 * messageIndex)
+
                             await sendMessage(mediaUrl, type, text)
                             await reply(from, replyData, type, text)
                         } catch (error) {
@@ -298,7 +256,7 @@ const start = async () => {
                         }
                     }
 
-                    store[channel] = messagesToSend.pop().id
+                    store[channel] = newMessages[newMessages.length - 1].id
                     writeFile('store.json', store)
                 }
             } catch (error) {
