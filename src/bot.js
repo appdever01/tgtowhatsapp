@@ -88,13 +88,14 @@ const start = async () => {
         if (connection === 'close') {
             const { statusCode } = new Boom(lastDisconnect?.error).output
             if (statusCode !== DisconnectReason.loggedOut) {
-                client.log('Reconnecting...')
-                setTimeout(() => start(), 3000)
+                client.log('Connection closed, attempting reconnect...')
+                await delay(5000)
+                start()
             } else {
-                client.log('Disconnected.', true)
+                client.log('Logged out, clearing session...', true)
                 await remove('session')
-                client.log('Starting...')
-                setTimeout(() => start(), 3000)
+                await delay(3000)
+                start()
             }
         }
         if (connection === 'connecting') client.log('Connecting to WhatsApp...')
@@ -193,21 +194,32 @@ const start = async () => {
     })
 
     const reply = async (from, content, type = 'text', caption) => {
-        try {
-            client.log(`wa_message: ${type}`)
-            if (type === 'text' && Buffer.isBuffer(content)) {
-                throw new Error('Cannot send a Buffer as a text message')
-            }
-            return await client.sendMessage(from, {
-                [type]: content,
-                caption
-            })
-        } catch (error) {
-            client.log(`Failed to send WhatsApp message: ${error.message}`, true)
-            if (error.message === 'Connection Closed') {
-                client.log('Attempting to reconnect...', true)
-                await delay(3000)
-                return reply(from, content, type, caption)
+        const maxRetries = 3
+        let retryCount = 0
+
+        while (retryCount < maxRetries) {
+            try {
+                client.log(`wa_message: ${type}`)
+                if (type === 'text' && Buffer.isBuffer(content)) {
+                    throw new Error('Cannot send a Buffer as a text message')
+                }
+                return await client.sendMessage(from, {
+                    [type]: content,
+                    caption
+                })
+            } catch (error) {
+                client.log(`Failed to send WhatsApp message: ${error.message}`, true)
+
+                if (error.message === 'Connection Closed' || error.message === 'Timed Out') {
+                    retryCount++
+                    if (retryCount < maxRetries) {
+                        client.log(`Retry attempt ${retryCount}/${maxRetries}...`, true)
+                        await delay(5000 * retryCount) // Exponential backoff
+                        continue
+                    }
+                }
+
+                throw new Error(`Failed to send message after ${maxRetries} attempts: ${error.message}`)
             }
         }
     }
@@ -241,18 +253,36 @@ const start = async () => {
 
                 if (newMessages.length > 0) {
                     for (const message of newMessages) {
-                        try {
-                            addMessage(channel, message)
-                            const { type, caption, mediaUrl } = message
-                            let text = await transcribe(caption)
-                            text = `*${channel}*\n\n${text}`
-                            const replyData = type === 'text' ? text : { url: mediaUrl }
+                        let retries = 0
+                        const maxRetries = 3
 
-                            await sendMessage(mediaUrl, type, text)
-                            await reply(from, replyData, type, text)
-                        } catch (error) {
-                            client.log(`Error processing message: ${error.message}`, true)
-                            continue
+                        while (retries < maxRetries) {
+                            try {
+                                addMessage(channel, message)
+                                const { type, caption, mediaUrl } = message
+                                let text = await transcribe(caption)
+                                text = `*${channel}*\n\n${text}`
+                                const replyData = type === 'text' ? text : { url: mediaUrl }
+
+                                await Promise.all([
+                                    sendMessage(mediaUrl, type, text).catch((err) =>
+                                        client.log(`Telegram send failed: ${err.message}`, true)
+                                    ),
+                                    reply(from, replyData, type, text)
+                                ])
+
+                                break // Success, exit retry loop
+                            } catch (error) {
+                                retries++
+                                if (retries === maxRetries) {
+                                    client.log(
+                                        `Failed to process message after ${maxRetries} attempts: ${error.message}`,
+                                        true
+                                    )
+                                    continue
+                                }
+                                await delay(5000 * retries) // Exponential backoff
+                            }
                         }
                     }
 

@@ -136,3 +136,4 @@ dist
 session
 session.json
 test.js
+database/groups.json
